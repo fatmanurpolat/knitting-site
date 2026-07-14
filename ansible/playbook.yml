@@ -1,0 +1,21 @@
+---
+# =============================================================================
+# Örgülog — provision & deploy
+#
+#   cd ansible
+#   cp inventory.example.ini inventory.ini   # edit host + user
+#   # edit group_vars/all.yml (domain, brand, TLS)
+#   ansible-playbook playbook.yml
+#
+# Roles run in order: base packages → Node.js → app (build + systemd) → nginx.
+# =============================================================================
+- name: Provision and deploy Örgülog
+  hosts: web
+  become: true
+  gather_facts: true
+
+  roles:
+    - common   # base packages, app user, rsync
+    - nodejs   # Node.js LTS from NodeSource
+    - app      # push code, npm ci, build, systemd service
+    - nginx    # reverse proxy (+ optional Let's Encrypt TLS)

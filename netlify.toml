@@ -1,0 +1,23 @@
+# Netlify build config — drag-and-drop the `dist-site/` folder, OR connect the
+# repo and Netlify will run this automatically.
+[build]
+  command = "npm run generate"
+  publish = "dist-site"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Netlify serves /story from story.html automatically (pretty URLs) and uses
+# dist-site/404.html for unknown paths — no extra redirects needed.
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

@@ -1,0 +1,23 @@
+<footer class="site-footer">
+  <div class="wrap site-footer__inner reveal">
+    <p class="site-footer__brand"><%= brand.name %></p>
+    <p class="site-footer__tag script"><%= brand.tagline %></p>
+
+    <ul class="site-footer__links">
+      <!-- Instagram/WhatsApp/e-posta site geneli config.ts (veya BRAND_* env) üzerinden ayarlanır -->
+      <li><a href="<%= brand.instagramUrl %>" target="_blank" rel="noopener">Instagram</a></li>
+      <% if (brand.whatsappUrl && brand.whatsappUrl !== '#whatsapp') { %>
+      <li><a href="<%= brand.whatsappUrl %>" target="_blank" rel="noopener">WhatsApp</a></li>
+      <% } %>
+      <!-- E-postayı config / BRAND_EMAIL ile değiştirin ya da bu satırı silin -->
+      <li><a href="mailto:<%= brand.email %>">E-posta</a></li>
+      <li><a href="/contact">İletişim</a></li>
+    </ul>
+
+    <p class="site-footer__fine">
+      © <%= year %> <%= brand.name %>. Her ürün elde yapılır.
+    </p>
+  </div>
+</footer>
+
+<script src="/js/main.js" defer></script>

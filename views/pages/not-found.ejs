@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <main>
+    <section class="page-hero page-hero--tall">
+      <div class="wrap page-hero__inner reveal">
+        <p class="eyebrow">404</p>
+        <h1 class="display">Bir ilmek kaçmış gibi görünüyor.</h1>
+        <p class="lede"><code><%= requestedPath %></code> sayfasını bulamadık. Sizi geri götürelim.</p>
+        <div class="hero__cta">
+          <a class="btn" href="/">Anasayfaya dön</a>
+          <a class="btn btn--ghost" href="/dolls">Oyuncakları gör</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

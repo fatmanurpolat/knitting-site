@@ -1,0 +1,33 @@
+{
+  "name": "orgulog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Story-first portfolio site for Örgülog — handmade crochet dolls & bags. TypeScript + Fastify, hexagonal architecture.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "generate": "tsx src/adapters/in/static-site/generate.ts",
+    "build:site": "npm run generate",
+    "preview:site": "npx --yes serve dist-site",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist dist-site"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.0",
+    "@fastify/view": "^10.0.0",
+    "ejs": "^3.1.10",
+    "fastify": "^5.10.0"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  }
+}

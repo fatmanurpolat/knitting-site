@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <main>
+    <section class="page-hero">
+      <div class="wrap page-hero__inner reveal">
+        <p class="eyebrow">Oyuncaklar</p>
+        <!-- REPLACE: oyuncaklar başlığı -->
+        <h1 class="display">Minik dostlar, tek tek elde.</h1>
+        <!-- REPLACE: oyuncaklar açıklaması -->
+        <p class="lede">
+          Her oyuncak siparişe özel örülür ve birkaç akşam sürer. Sevdiğiniz renkleri
+          söyleyin, size özel bir tane öreyim.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <% if (products.length === 0) { %>
+          <p class="empty">Yeni ürünler tezgahta — yakında tekrar göz atın.</p>
+        <% } else { %>
+          <div class="grid grid--3">
+            <% products.forEach(function (product) { %>
+              <%- include('../partials/product-card', { product: product }) %>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+    </section>
+
+    <section class="strip">
+      <div class="wrap strip__inner strip__inner--center reveal">
+        <p class="script strip__cta">Aradığınızı bulamadınız mı? Size özel örmeyi çok severim.</p>
+        <a class="btn" href="/contact">Size özel oyuncak isteyin</a>
+      </div>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

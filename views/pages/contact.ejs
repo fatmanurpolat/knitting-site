@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <main>
+    <section class="page-hero">
+      <div class="wrap page-hero__inner reveal">
+        <p class="eyebrow">Merhaba deyin</p>
+        <!-- REPLACE: iletişim başlığı -->
+        <h1 class="display">Birlikte bir şeyler yapalım.</h1>
+        <!-- REPLACE: iletişim açıklaması -->
+        <p class="lede">
+          Size özel sipariş, bir soru ya da sadece merhaba demek için — bana en hızlı
+          ulaşabileceğiniz yer Instagram. Gelen her mesajı okuyorum.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap contact">
+        <div class="contact__card reveal">
+          <h2 class="h3">Instagram</h2>
+          <p>Size özel siparişler ve kısa sorular için en iyisi.</p>
+          <!-- #instagram-dm → Instagram profil / DM bağlantınız -->
+          <a class="btn" href="<%= brand.instagramUrl %>" target="_blank" rel="noopener">Instagram'dan yazın</a>
+        </div>
+        <div class="contact__card reveal">
+          <h2 class="h3">WhatsApp</h2>
+          <p>Sohbet etmeyi mi seversiniz? Sipariş için doğrudan yazın.</p>
+          <!-- BRAND_WHATSAPP ile değiştirin (örn. https://wa.me/905551234567) ya da bu kartı silin -->
+          <a class="btn" href="<%= brand.whatsappUrl %>" target="_blank" rel="noopener">WhatsApp'tan yazın</a>
+        </div>
+        <div class="contact__card reveal">
+          <h2 class="h3">E-posta</h2>
+          <p>Bir mesajdan fazlasını gerektiren her şey için.</p>
+          <!-- Adresi BRAND_EMAIL ile değiştirin ya da bu kartı tamamen silin -->
+          <a class="btn btn--ghost" href="mailto:<%= brand.email %>">E-posta gönderin</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────── INSTAGRAM IZGARASI ───────────────── -->
+    <section class="section section--tint">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <p class="eyebrow">Bizi takip edin</p>
+          <h2 class="h2">Atölyeden</h2>
+        </div>
+
+        <!--
+          İPUCU: CANLI bir Instagram akışı göstermek için bu ızgarayı
+          LightWidget (lightwidget.com) veya Instagram'ın kendi gömme koduyla
+          değiştirebilirsiniz. Aksi halde bu fotoğrafları en yeni kareleriniz
+          ile değiştirin.
+        -->
+        <% var studio = [
+             'doll-monkey.jpeg', 'bag-woven-camel.jpeg', 'doll-cow-flowers.jpeg',
+             'bag-clutch-silver.jpeg', 'doll-bunny-blue.jpeg', 'bag-woven-rose.jpeg'
+           ]; %>
+        <div class="insta-grid reveal">
+          <% studio.forEach(function (file) { %>
+            <a class="insta-grid__item" href="<%= brand.instagramUrl %>" target="_blank" rel="noopener">
+              <img src="/images/<%= file %>" alt="Atölyeden" loading="lazy" />
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# dependencies & build output
+node_modules/
+dist/
+dist-site/
+
+# env & secrets
+.env
+*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# ansible
+ansible/inventory.ini
+*.retry
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/

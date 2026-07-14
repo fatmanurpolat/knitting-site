@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <main>
+    <!-- ─────────────────────────── HERO ─────────────────────────── -->
+    <section class="hero">
+      <div class="wrap hero__inner">
+        <div class="hero__text reveal">
+          <!-- REPLACE: hero üst başlık -->
+          <p class="eyebrow">El örgüsü · siparişe özel</p>
+          <!-- REPLACE: hero başlık -->
+          <h1 class="display">Minik dostlar ve günlük çantalar, <span class="script">elde örülüyor.</span></h1>
+          <!-- REPLACE: hero paragraf -->
+          <p class="lede">
+            <%= brand.name %>, örgü oyuncaklar ve çantalar üreten minik bir atölye. Her ürün;
+            güzel ipliklerden, sabırla ve tek tek, ilmek ilmek örülüyor — bu yüzden hiçbiri
+            bir diğerinin tıpatıp aynısı değil.
+          </p>
+          <div class="hero__cta">
+            <a class="btn" href="/dolls">Oyuncakları keşfet</a>
+            <a class="btn btn--ghost" href="/bags">Çantaları gör</a>
+          </div>
+        </div>
+
+        <div class="hero__media reveal">
+          <!-- REPLACE: dilediğiniz hero fotoğrafıyla değiştirin -->
+          <img src="/images/hero-monkey.jpeg" alt="El örgüsü bir maymun, çocuk odasında" />
+          <span class="hero__note script">güneşli bir köşede</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────── ÖNE ÇIKANLAR ─────────────────────── -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <p class="eyebrow">Birkaç favori</p>
+          <h2 class="h2">Yeni tamamlananlar</h2>
+        </div>
+
+        <div class="grid grid--3">
+          <% featured.forEach(function (product) { %>
+            <%- include('../partials/product-card', { product: product }) %>
+          <% }); %>
+        </div>
+
+        <div class="section__more reveal">
+          <a class="link-more" href="/dolls">Hepsine göz atın →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────── FOTOĞRAF GALERİSİ ────────────────── -->
+    <section class="section section--tint">
+      <div class="wrap">
+        <div class="section__head reveal">
+          <p class="eyebrow">Minik ailemiz</p>
+          <h2 class="h2">Hepsi tek tek, elde</h2>
+        </div>
+
+        <div class="gallery">
+          <% gallery.forEach(function (product) { %>
+            <a class="gallery__item reveal" href="/<%= product.category === 'bag' ? 'bags' : 'dolls' %>" aria-label="<%= product.name %>">
+              <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────── ŞERİT ────────────────────────── -->
+    <section class="strip">
+      <div class="wrap strip__inner reveal">
+        <!-- REPLACE: üç küçük söz -->
+        <div class="strip__item"><span class="strip__num">01</span><p>Tek tek örülür, asla seri üretim değildir.</p></div>
+        <div class="strip__item"><span class="strip__num">02</span><p>Doğal pamuk ve yün; minik ellere nazik.</p></div>
+        <div class="strip__item"><span class="strip__num">03</span><p>Siparişe özel — sevdiğiniz renkleri söyleyin.</p></div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────── HİKAYE TANITIMI ──────────────────── -->
+    <section class="section section--tint">
+      <div class="wrap teaser reveal">
+        <blockquote class="pull script">
+          <!-- REPLACE: üretici sözü -->
+          “Her ilmek, acele etmeden, sabırla ve sevgiyle atılıyor.”
+        </blockquote>
+        <a class="btn btn--ghost" href="/story">Hikayemizi okuyun</a>
+      </div>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

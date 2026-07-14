@@ -1,0 +1,27 @@
+---
+# ── App identity ────────────────────────────────────────────────────────────
+app_name: orgulog
+app_user: orgulog
+app_group: orgulog
+app_dir: "/opt/{{ app_name }}"
+app_repo: "" # optional: git URL. Leave empty to push local code with rsync.
+app_branch: main
+
+# ── Runtime ─────────────────────────────────────────────────────────────────
+node_major: "20" # NodeSource major version to install
+app_env: production
+app_port: 3000 # internal port the Node app binds to (nginx proxies to it)
+app_host: "127.0.0.1" # bind to loopback; nginx is the only public entrypoint
+
+# Branding — passed to the app via the systemd unit's Environment=.
+# REPLACE these with your real values (or set them in the dashboard later).
+brand_name: "Örgülog"
+brand_tagline: "İplikle, sabırla ve sevgiyle; tek tek elde örülüyor."
+brand_instagram: "https://www.instagram.com/orgulog2/"
+brand_whatsapp: "https://wa.me/905387277185"
+brand_email: "hello@orgulog.example"
+
+# ── nginx / TLS ───────────────────────────────────────────────────────────────
+server_name: "example.com www.example.com" # REPLACE with your domain(s)
+enable_tls: false # set true after DNS points here to obtain Let's Encrypt certs
+certbot_email: "you@example.com" # REPLACE — required when enable_tls is true

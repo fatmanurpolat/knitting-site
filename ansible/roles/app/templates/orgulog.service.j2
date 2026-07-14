@@ -1,0 +1,38 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Örgülog website ({{ app_name }})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_dir }}
+ExecStart=/usr/bin/node {{ app_dir }}/dist/main.js
+Restart=on-failure
+RestartSec=3
+
+# Runtime configuration (read by src/infrastructure/config.ts)
+Environment=NODE_ENV={{ app_env }}
+Environment=HOST={{ app_host }}
+Environment=PORT={{ app_port }}
+Environment=BRAND_NAME={{ brand_name }}
+Environment=BRAND_TAGLINE={{ brand_tagline }}
+Environment=BRAND_INSTAGRAM={{ brand_instagram }}
+Environment=BRAND_WHATSAPP={{ brand_whatsapp }}
+Environment=BRAND_EMAIL={{ brand_email }}
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ app_dir }}
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

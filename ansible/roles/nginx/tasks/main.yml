@@ -1,0 +1,56 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Remove default nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Install Örgülog nginx site
+  ansible.builtin.template:
+    src: orgulog.nginx.conf.j2
+    dest: "/etc/nginx/sites-available/{{ app_name }}.conf"
+    mode: "0644"
+  notify: reload nginx
+
+- name: Enable Örgülog nginx site
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ app_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ app_name }}.conf"
+    state: link
+  notify: reload nginx
+
+- name: Validate nginx configuration
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: Ensure nginx is running and enabled
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+
+# ── Optional: Let's Encrypt TLS ──────────────────────────────────────────────
+- name: Install certbot (TLS enabled)
+  when: enable_tls | bool
+  ansible.builtin.apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+- name: Obtain/renew certificate with certbot (TLS enabled)
+  when: enable_tls | bool
+  ansible.builtin.command:
+    cmd: >-
+      certbot --nginx --non-interactive --agree-tos
+      -m {{ certbot_email }}
+      {% for name in server_name.split() %}-d {{ name }} {% endfor %}
+      --redirect
+  register: certbot_run
+  changed_when: "'Congratulations' in certbot_run.stdout or 'Successfully' in certbot_run.stdout"
