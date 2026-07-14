@@ -212,3 +212,4 @@ journalctl -u orgulog -f
 - Security headers: set by `netlify.toml` for the static site, and by the app
   itself for the dynamic server.
 - `/healthz` returns `{"status":"ok"}` for uptime checks (dynamic server only).
+# knitting-site
