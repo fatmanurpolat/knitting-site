@@ -38,18 +38,19 @@
     group: "{{ app_group }}"
     mode: "0755"
 
-- name: Allow OpenSSH and HTTP/HTTPS through the firewall
+# Allow by port number (not the "Nginx Full" profile, which only exists after
+# nginx is installed) so enabling ufw never blocks SSH or the web server.
+- name: Allow SSH / HTTP / HTTPS through the firewall
   community.general.ufw:
     rule: allow
-    name: "{{ item }}"
+    port: "{{ item }}"
+    proto: tcp
   loop:
-    - OpenSSH
-    - Nginx Full
-  # Nginx Full profile appears after nginx is installed; ignore on first run.
-  failed_when: false
+    - "22"
+    - "80"
+    - "443"
 
-- name: Enable the firewall
+- name: Enable the firewall (default deny incoming)
   community.general.ufw:
     state: enabled
     policy: deny
-  failed_when: false

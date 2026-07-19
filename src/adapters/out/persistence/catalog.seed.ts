@@ -114,7 +114,7 @@ const DOLLS: Product[] = [
     id: 'doll-cat',
     slug: 'kedi-minnos',
     category: 'doll',
-    name: 'Kedi Minnoş', // REPLACE
+    name: 'Kedi Tom', // REPLACE
     description:
       'Büyük kulaklı, gri-beyaz, muzip gülüşlü; yumuşak kadifeden, keçe detaylı gözleri ve bıyıklarıyla bir kedi.', // REPLACE
     image: '/images/doll-cat.jpeg',

@@ -10,8 +10,14 @@ app_branch: main
 # ── Runtime ─────────────────────────────────────────────────────────────────
 node_major: "20" # NodeSource major version to install
 app_env: production
-app_port: 3000 # internal port the Node app binds to (nginx proxies to it)
-app_host: "127.0.0.1" # bind to loopback; nginx is the only public entrypoint
+app_port: 3000 # internal port the Node app binds to (the reverse proxy forwards to it)
+# 0.0.0.0 so the containerised Caddy (Klip's edge) can reach it via the docker
+# gateway; ufw still blocks 3000 from the internet (only 22/80/443 are open).
+app_host: "0.0.0.0"
+
+# This server's edge is the existing Klip Caddy (owns 80/443), so we do NOT
+# install a second host nginx. Set true only on a dedicated/fresh box.
+manage_nginx: false
 
 # Branding — passed to the app via the systemd unit's Environment=.
 # REPLACE these with your real values (or set them in the dashboard later).
@@ -21,7 +27,17 @@ brand_instagram: "https://www.instagram.com/orgulog2/"
 brand_whatsapp: "https://wa.me/905387277185"
 brand_email: "hello@orgulog.example"
 
+# ── Dashboard & database ──────────────────────────────────────────────────────
+# The single-user dashboard needs Postgres. Postgres is provisioned locally on
+# this host (listens on localhost only) and the app connects over the loopback.
+# Secrets (admin_password, session_secret, db_password) live in the gitignored
+# ansible/secrets.yml, loaded by the playbook.
+admin_user: "admin"
+db_name: "{{ app_name }}"
+db_user: "{{ app_name }}"
+database_url: "postgres://{{ db_user }}:{{ db_password }}@localhost:5432/{{ db_name }}"
+
 # ── nginx / TLS ───────────────────────────────────────────────────────────────
-server_name: "example.com www.example.com" # REPLACE with your domain(s)
-enable_tls: false # set true after DNS points here to obtain Let's Encrypt certs
-certbot_email: "you@example.com" # REPLACE — required when enable_tls is true
+server_name: "orgulog.fatmanur.xyz"
+enable_tls: true # DNS zaten sunucuya işaret ediyor → Let's Encrypt sertifikası al
+certbot_email: "polatnur77@gmail.com"

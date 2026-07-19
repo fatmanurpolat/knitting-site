@@ -1,0 +1,54 @@
+---
+# Provision a local PostgreSQL server for the dashboard. It listens on localhost
+# only (Debian/Ubuntu default), so the app reaches it over the loopback and the
+# firewall never needs to expose 5432. The app itself migrates the schema and
+# seeds the catalog on first boot (see infrastructure/container.ts).
+- name: Install PostgreSQL server
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib  # pgcrypto (gen_random_uuid) used by the schema
+      - acl                 # lets Ansible become the unprivileged postgres user
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure PostgreSQL is running and enabled at boot
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Check whether the app database role exists
+  ansible.builtin.command:
+    cmd: psql -tAc "SELECT 1 FROM pg_roles WHERE rolname = '{{ db_user }}'"
+  become_user: postgres
+  register: db_role_check
+  changed_when: false
+
+- name: Create the app database role
+  ansible.builtin.command:
+    cmd: psql -c "CREATE ROLE {{ db_user }} LOGIN PASSWORD '{{ db_password }}'"
+  become_user: postgres
+  when: db_role_check.stdout != "1"
+  no_log: true
+
+- name: Keep the app database role password in sync
+  ansible.builtin.command:
+    cmd: psql -c "ALTER ROLE {{ db_user }} WITH LOGIN PASSWORD '{{ db_password }}'"
+  become_user: postgres
+  no_log: true
+  changed_when: false
+
+- name: Check whether the app database exists
+  ansible.builtin.command:
+    cmd: psql -tAc "SELECT 1 FROM pg_database WHERE datname = '{{ db_name }}'"
+  become_user: postgres
+  register: db_check
+  changed_when: false
+
+- name: Create the app database owned by the app role
+  ansible.builtin.command:
+    cmd: createdb -O {{ db_user }} {{ db_name }}
+  become_user: postgres
+  when: db_check.stdout != "1"

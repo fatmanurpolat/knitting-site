@@ -14,8 +14,15 @@
   become: true
   gather_facts: true
 
+  vars_files:
+    - secrets.yml   # gitignored: admin_password, session_secret, db_password
+
   roles:
     - common   # base packages, app user, rsync
     - nodejs   # Node.js LTS from NodeSource
+    - postgres # Postgres server + app database/role (dashboard storage)
     - app      # push code, npm ci, build, systemd service
-    - nginx    # reverse proxy (+ optional Let's Encrypt TLS)
+    # Host nginx only on a dedicated box. On a server whose edge is already a
+    # reverse proxy (e.g. the Klip Caddy here), keep manage_nginx=false.
+    - role: nginx
+      when: manage_nginx | default(true)

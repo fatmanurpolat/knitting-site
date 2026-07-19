@@ -22,6 +22,9 @@ Environment=BRAND_TAGLINE={{ brand_tagline }}
 Environment=BRAND_INSTAGRAM={{ brand_instagram }}
 Environment=BRAND_WHATSAPP={{ brand_whatsapp }}
 Environment=BRAND_EMAIL={{ brand_email }}
+# Secrets (DATABASE_URL, ADMIN_USER, ADMIN_PASSWORD, SESSION_SECRET) — kept in a
+# root:{{ app_group }} 0640 file rather than inline, so they aren't world-readable.
+EnvironmentFile=/etc/{{ app_name }}/{{ app_name }}.env
 
 # Hardening
 NoNewPrivileges=true

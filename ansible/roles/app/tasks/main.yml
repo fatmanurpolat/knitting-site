@@ -59,6 +59,26 @@
   become_user: "{{ app_user }}"
   changed_when: true
 
+# ── Secret runtime configuration (dashboard + database) ──────────────────────
+# Kept out of the world-readable unit file: systemd reads it via EnvironmentFile.
+- name: Create the config directory
+  ansible.builtin.file:
+    path: /etc/{{ app_name }}
+    state: directory
+    owner: root
+    group: "{{ app_group }}"
+    mode: "0750"
+
+- name: Install the runtime environment file (secrets)
+  ansible.builtin.template:
+    src: orgulog.env.j2
+    dest: "/etc/{{ app_name }}/{{ app_name }}.env"
+    owner: root
+    group: "{{ app_group }}"
+    mode: "0640"
+  no_log: true
+  notify: restart app
+
 # ── systemd service ──────────────────────────────────────────────────────────
 - name: Install systemd unit
   ansible.builtin.template:
