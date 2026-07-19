@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('_head', { title: 'Ürünler' }) %>
+</head>
+<body class="admin">
+  <header class="admin-bar">
+    <div class="admin-bar__inner">
+      <a class="admin-bar__brand" href="/admin"><%= brandName %> · Panel</a>
+      <nav class="admin-bar__nav">
+        <a href="/" target="_blank" rel="noopener">Siteyi gör ↗</a>
+        <form method="post" action="/admin/logout"><button class="linkbtn" type="submit">Çıkış</button></form>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-head">
+      <h1>Ürünler <span class="muted">(<%= products.length %>)</span></h1>
+      <a class="btn" href="/admin/products/new">+ Yeni ürün</a>
+    </div>
+
+    <% if (products.length === 0) { %>
+      <p class="muted">Henüz ürün yok. “Yeni ürün” ile ekleyin.</p>
+    <% } else { %>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Görsel</th><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Öne çıkan</th><th>Sıra</th><th></th></tr>
+          </thead>
+          <tbody>
+            <% products.forEach(function (p) { %>
+              <tr>
+                <td class="cell-thumb">
+                  <% if (p.image) { %><img src="<%= p.image %>" alt="<%= p.name %>" /><% } else { %><span class="noimg">—</span><% } %>
+                </td>
+                <td>
+                  <strong><%= p.name %></strong><br />
+                  <span class="muted mono"><%= p.slug %></span>
+                </td>
+                <td><%= p.category === 'bag' ? 'Çanta' : 'Oyuncak' %></td>
+                <td><%= p.priceCents > 0 ? formatPrice(p.priceCents, p.currency) : '—' %></td>
+                <td><%= p.featured ? '★' : '' %></td>
+                <td class="muted"><%= p.order %></td>
+                <td class="cell-actions">
+                  <a class="btn btn--sm btn--ghost" href="/admin/products/<%= p.id %>/edit">Düzenle</a>
+                  <form method="post" action="/admin/products/<%= p.id %>/delete"
+                        onsubmit="return confirm('“<%= p.name.replace(/'/g, ' ') %>” silinsin mi?');">
+                    <button class="btn btn--sm btn--danger" type="submit">Sil</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </main>
+</body>
+</html>

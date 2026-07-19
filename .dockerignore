@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-site
+.git
+.github
+ansible
+.env
+*.local
+*.log
+npm-debug.log*
+.DS_Store
+README.md

@@ -15,6 +15,17 @@ export interface AppConfig {
   readonly publicDir: string;
   /** Brand identity surfaced to every template. */
   readonly brand: BrandConfig;
+  /** Database. If `url` is unset the app falls back to the in-memory seed. */
+  readonly database: { readonly url?: string };
+  /** Single-user dashboard credentials + cookie signing secret. */
+  readonly admin: AdminConfig;
+}
+
+export interface AdminConfig {
+  readonly user: string;
+  /** Empty password ⇒ dashboard login is disabled. */
+  readonly password: string;
+  readonly sessionSecret: string;
 }
 
 export interface BrandConfig {
@@ -55,6 +66,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       // wa.me/<ülke kodu + numara>, +/boşluk olmadan → +90 538 727 71 85
       whatsappUrl: env.BRAND_WHATSAPP ?? 'https://wa.me/905387277185',
       email: env.BRAND_EMAIL ?? 'hello@orgulog.example',
+    },
+    database: { url: env.DATABASE_URL },
+    admin: {
+      user: env.ADMIN_USER ?? 'admin',
+      password: env.ADMIN_PASSWORD ?? '',
+      sessionSecret: env.SESSION_SECRET ?? 'dev-insecure-secret-change-me-please-32+',
     },
   };
 }

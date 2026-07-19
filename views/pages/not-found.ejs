@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<%= locale %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -9,12 +9,12 @@
   <main>
     <section class="page-hero page-hero--tall">
       <div class="wrap page-hero__inner reveal">
-        <p class="eyebrow">404</p>
-        <h1 class="display">Bir ilmek kaçmış gibi görünüyor.</h1>
-        <p class="lede"><code><%= requestedPath %></code> sayfasını bulamadık. Sizi geri götürelim.</p>
+        <p class="eyebrow"><%= t.notFound.eyebrow %></p>
+        <h1 class="display"><%= t.notFound.title %></h1>
+        <p class="lede"><%= t.notFound.leadPre %><code><%= requestedPath %></code><%= t.notFound.leadPost %></p>
         <div class="hero__cta">
-          <a class="btn" href="/">Anasayfaya dön</a>
-          <a class="btn btn--ghost" href="/dolls">Oyuncakları gör</a>
+          <a class="btn" href="<%= href('/') %>"><%= t.notFound.backHome %></a>
+          <a class="btn btn--ghost" href="<%= href('/dolls') %>"><%= t.notFound.seeDolls %></a>
         </div>
       </div>
     </section>

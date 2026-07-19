@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<%= locale %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -9,21 +9,16 @@
   <main>
     <section class="page-hero">
       <div class="wrap page-hero__inner reveal">
-        <p class="eyebrow">Çantalar</p>
-        <!-- REPLACE: çantalar başlığı -->
-        <h1 class="display">Her güne, her şıklığa çantalar.</h1>
-        <!-- REPLACE: çantalar açıklaması -->
-        <p class="lede">
-          Sağlam, yumuşak ve kullanılmak için yapıldı. Her çanta doğal ipliklerden elde
-          örülür ve taşıdıkça daha da güzelleşir.
-        </p>
+        <p class="eyebrow"><%= t.bags.eyebrow %></p>
+        <h1 class="display"><%= t.bags.title %></h1>
+        <p class="lede"><%= t.bags.lede %></p>
       </div>
     </section>
 
     <section class="section">
       <div class="wrap">
         <% if (products.length === 0) { %>
-          <p class="empty">Yeni ürünler tezgahta — yakında tekrar göz atın.</p>
+          <p class="empty"><%= t.bags.empty %></p>
         <% } else { %>
           <div class="grid grid--3">
             <% products.forEach(function (product) { %>
@@ -36,8 +31,8 @@
 
     <section class="strip">
       <div class="wrap strip__inner strip__inner--center reveal">
-        <p class="script strip__cta">Kendi renklerinizde ister misiniz?</p>
-        <a class="btn" href="/contact">Size özel çanta isteyin</a>
+        <p class="script strip__cta"><%= t.bags.stripCta %></p>
+        <a class="btn" href="<%= href('/contact') %>"><%= t.bags.stripBtn %></a>
       </div>
     </section>
   </main>

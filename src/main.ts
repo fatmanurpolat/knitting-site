@@ -3,18 +3,29 @@ import { buildContainer } from './infrastructure/container';
 import { buildServer } from './adapters/in/web/server';
 
 /**
- * Program entrypoint: load config → wire the container → build the server →
- * listen. Also handles graceful shutdown so systemd (see ansible/) can stop
- * and restart the service cleanly.
+ * Entrypoint: load config → wire the container (runs DB migrations/seed when a
+ * database is configured) → build the server → listen. Graceful shutdown closes
+ * the HTTP server and the DB pool.
  */
 async function main(): Promise<void> {
   const config = loadConfig();
-  const container = buildContainer(config);
-  const app = await buildServer({ config, catalog: container.catalog });
+  const container = await buildContainer(config);
+  const app = await buildServer({
+    config,
+    catalog: container.catalog,
+    admin: container.admin,
+    images: container.images,
+  });
+
+  app.log.info(
+    { storage: container.usingDatabase ? 'postgres' : 'in-memory' },
+    'catalog storage selected',
+  );
 
   const shutdown = async (signal: string): Promise<void> => {
     app.log.info({ signal }, 'shutting down');
     await app.close();
+    await container.close();
     process.exit(0);
   };
   process.on('SIGINT', () => void shutdown('SIGINT'));

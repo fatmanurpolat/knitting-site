@@ -1,24 +1,27 @@
 <%
-  // Per-page <title> and meta description, derived from the active page.
-  const TITLES = {
-    home:    { t: brand.name,                      d: brand.tagline },
-    story:   { t: 'Hikayemiz · ' + brand.name,     d: brand.name + ' nasıl başladı ve her ilmeğin arkasındaki eller.' },
-    dolls:   { t: 'Oyuncaklar · ' + brand.name,    d: 'El örgüsü amigurumi oyuncaklar, her biri tek tek örülüyor.' },
-    bags:    { t: 'Çantalar · ' + brand.name,      d: 'Her güne ve özel günlere el örgüsü çantalar.' },
-    contact: { t: 'İletişim · ' + brand.name,      d: 'Merhaba deyin, soru sorun ya da bizi takip edin.' }
-  };
-  const meta = TITLES[activePage] || TITLES.home;
+  // Per-page <title> and meta description, from the localized messages.
+  // An empty meta title means "use the brand name alone" (the home page).
+  const m = t.meta[activePage] || t.meta.home;
+  const pageTitle = m.title ? m.title + ' · ' + brand.name : brand.name;
+  const pageDesc = m.description.replace('{brand}', brand.name);
+  const ogLocale = { tr: 'tr_TR', en: 'en_US', de: 'de_DE' }[locale] || 'tr_TR';
 %>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title><%= meta.t %></title>
-<meta name="description" content="<%= meta.d %>" />
-<meta name="theme-color" content="#FBF5A7" />
+<title><%= pageTitle %></title>
+<meta name="description" content="<%= pageDesc %>" />
+<meta name="theme-color" content="#FBF5DD" />
+
+<!-- Alternate language versions of this page (SEO). -->
+<% langLinks.forEach(function (l) { %>
+<link rel="alternate" hreflang="<%= l.locale %>" href="<%= l.href %>" />
+<% }); %>
 
 <!-- Open Graph (nice link previews when shared) -->
 <meta property="og:type" content="website" />
-<meta property="og:title" content="<%= meta.t %>" />
-<meta property="og:description" content="<%= meta.d %>" />
+<meta property="og:title" content="<%= pageTitle %>" />
+<meta property="og:description" content="<%= pageDesc %>" />
+<meta property="og:locale" content="<%= ogLocale %>" />
 
 <!--
   Fonts load from Google Fonts and need an internet connection on the

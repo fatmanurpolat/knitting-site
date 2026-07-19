@@ -4,6 +4,8 @@ import ejs from 'ejs';
 import { loadConfig, AppConfig } from '../../../infrastructure/config';
 import { buildContainer } from '../../../infrastructure/container';
 import { CatalogQueries } from '../../../domain/ports/in/CatalogQueries';
+import { Locale, LOCALES } from '../../../domain/model/Locale';
+import { localePrefix } from '../../../i18n/urls';
 import { baseViewModel, PageKey } from '../web/viewModel';
 
 /**
@@ -20,13 +22,16 @@ import { baseViewModel, PageKey } from '../web/viewModel';
  * Extensionless links (/story, /dolls, …) are served as story.html / dolls.html
  * automatically by both Netlify and GitHub Pages, so the same nav works whether
  * the site is served by this static output or by the dynamic Fastify server.
+ *
+ * Every page is rendered once per language: Turkish at the site root and English
+ * / German under en/ and de/ subfolders (matching the Fastify URL structure).
  */
 
 interface PageSpec {
-  out: string; // output filename, relative to the site root
+  out: string; // output filename, relative to the (per-locale) site root
   view: string; // EJS template, relative to viewsDir
   page: PageKey; // for nav highlighting
-  data: () => Promise<Record<string, unknown>>; // page-specific view data
+  data: (locale: Locale) => Promise<Record<string, unknown>>; // page-specific view data
 }
 
 function pageSpecs(catalog: CatalogQueries): PageSpec[] {
@@ -35,11 +40,11 @@ function pageSpecs(catalog: CatalogQueries): PageSpec[] {
       out: 'index.html',
       view: 'pages/home.ejs',
       page: 'home',
-      data: async () => {
+      data: async (locale) => {
         const [featured, dolls, bags] = await Promise.all([
-          catalog.listFeatured(),
-          catalog.listByCategory('doll'),
-          catalog.listByCategory('bag'),
+          catalog.listFeatured(locale),
+          catalog.listByCategory('doll', locale),
+          catalog.listByCategory('bag', locale),
         ]);
         return { featured, gallery: [...dolls, ...bags] };
       },
@@ -49,13 +54,13 @@ function pageSpecs(catalog: CatalogQueries): PageSpec[] {
       out: 'dolls.html',
       view: 'pages/dolls.ejs',
       page: 'dolls',
-      data: async () => ({ products: await catalog.listByCategory('doll') }),
+      data: async (locale) => ({ products: await catalog.listByCategory('doll', locale) }),
     },
     {
       out: 'bags.html',
       view: 'pages/bags.ejs',
       page: 'bags',
-      data: async () => ({ products: await catalog.listByCategory('bag') }),
+      data: async (locale) => ({ products: await catalog.listByCategory('bag', locale) }),
     },
     { out: 'contact.html', view: 'pages/contact.ejs', page: 'contact', data: async () => ({}) },
     {
@@ -95,30 +100,42 @@ function applyBasePath(html: string, basePath: string): string {
 
 async function generate(config: AppConfig, outDir: string): Promise<void> {
   const basePath = process.env.BASE_PATH ?? '';
-  const container = buildContainer(config);
-  const specs = pageSpecs(container.catalog);
-  const year = new Date().getFullYear();
+  const container = await buildContainer(config);
+  try {
+    const specs = pageSpecs(container.catalog);
+    const year = new Date().getFullYear();
 
-  await fs.rm(outDir, { recursive: true, force: true });
-  await fs.mkdir(outDir, { recursive: true });
+    await fs.rm(outDir, { recursive: true, force: true });
+    await fs.mkdir(outDir, { recursive: true });
 
-  // 1. render every page
-  for (const spec of specs) {
-    const templatePath = path.join(config.viewsDir, spec.view);
-    const data = { ...baseViewModel(config, spec.page, year), ...(await spec.data()) };
-    const html = applyBasePath(await ejs.renderFile(templatePath, data), basePath);
-    await fs.writeFile(path.join(outDir, spec.out), html, 'utf8');
-    console.log(`  ✓ ${spec.out}`);
+    // 1. render every page, once per language (tr at root, en/ and de/ subfolders)
+    for (const locale of LOCALES) {
+      const prefix = localePrefix(locale); // '' | '/en' | '/de'
+      const localeDir = prefix ? path.join(outDir, locale) : outDir;
+      await fs.mkdir(localeDir, { recursive: true });
+      for (const spec of specs) {
+        const templatePath = path.join(config.viewsDir, spec.view);
+        const data = { ...baseViewModel(config, spec.page, year, locale), ...(await spec.data(locale)) };
+        const html = applyBasePath(await ejs.renderFile(templatePath, data), basePath);
+        await fs.writeFile(path.join(localeDir, spec.out), html, 'utf8');
+        console.log(`  ✓ ${prefix ? `${locale}/` : ''}${spec.out}`);
+      }
+    }
+
+    // 2. copy static assets (css/js/images) to the site root
+    await copyDir(config.publicDir, outDir);
+    console.log('  ✓ public/ assets');
+
+    // 3. GitHub Pages: skip Jekyll processing so files like _redirects survive
+    await fs.writeFile(path.join(outDir, '.nojekyll'), '', 'utf8');
+
+    // NOTE: with a database, product images are served at /media/<id> by the
+    // running app — the static export cannot serve those. The static generator
+    // is best used in no-DB (file-image) mode.
+    console.log(`\nStatic site written to ${outDir}${basePath ? ` (base "${basePath}")` : ''}`);
+  } finally {
+    await container.close();
   }
-
-  // 2. copy static assets (css/js/images) to the site root
-  await copyDir(config.publicDir, outDir);
-  console.log('  ✓ public/ assets');
-
-  // 3. GitHub Pages: skip Jekyll processing so files like _redirects survive
-  await fs.writeFile(path.join(outDir, '.nojekyll'), '', 'utf8');
-
-  console.log(`\nStatic site written to ${outDir}${basePath ? ` (base "${basePath}")` : ''}`);
 }
 
 async function main(): Promise<void> {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<%= locale %>">
 <head>
   <%- include('../partials/head') %>
 </head>
@@ -11,26 +11,19 @@
     <section class="hero">
       <div class="wrap hero__inner">
         <div class="hero__text reveal">
-          <!-- REPLACE: hero üst başlık -->
-          <p class="eyebrow">El örgüsü · siparişe özel</p>
-          <!-- REPLACE: hero başlık -->
-          <h1 class="display">Minik dostlar ve günlük çantalar, <span class="script">elde örülüyor.</span></h1>
-          <!-- REPLACE: hero paragraf -->
-          <p class="lede">
-            <%= brand.name %>, örgü oyuncaklar ve çantalar üreten minik bir atölye. Her ürün;
-            güzel ipliklerden, sabırla ve tek tek, ilmek ilmek örülüyor — bu yüzden hiçbiri
-            bir diğerinin tıpatıp aynısı değil.
-          </p>
+          <p class="eyebrow"><%= t.home.eyebrow %></p>
+          <h1 class="display"><%- t.home.titleHtml %></h1>
+          <p class="lede"><%= t.home.lede.replace('{brand}', brand.name) %></p>
           <div class="hero__cta">
-            <a class="btn" href="/dolls">Oyuncakları keşfet</a>
-            <a class="btn btn--ghost" href="/bags">Çantaları gör</a>
+            <a class="btn" href="<%= href('/dolls') %>"><%= t.home.ctaDolls %></a>
+            <a class="btn btn--ghost" href="<%= href('/bags') %>"><%= t.home.ctaBags %></a>
           </div>
         </div>
 
         <div class="hero__media reveal">
           <!-- REPLACE: dilediğiniz hero fotoğrafıyla değiştirin -->
-          <img src="/images/hero-monkey.jpeg" alt="El örgüsü bir maymun, çocuk odasında" />
-          <span class="hero__note script">güneşli bir köşede</span>
+          <img src="/images/hero-monkey.jpeg" alt="<%= t.home.heroImgAlt %>" />
+          <span class="hero__note script"><%= t.home.heroNote %></span>
         </div>
       </div>
     </section>
@@ -39,8 +32,8 @@
     <section class="section">
       <div class="wrap">
         <div class="section__head reveal">
-          <p class="eyebrow">Birkaç favori</p>
-          <h2 class="h2">Yeni tamamlananlar</h2>
+          <p class="eyebrow"><%= t.home.featuredEyebrow %></p>
+          <h2 class="h2"><%= t.home.featuredTitle %></h2>
         </div>
 
         <div class="grid grid--3">
@@ -50,7 +43,7 @@
         </div>
 
         <div class="section__more reveal">
-          <a class="link-more" href="/dolls">Hepsine göz atın →</a>
+          <a class="link-more" href="<%= href('/dolls') %>"><%= t.home.more %></a>
         </div>
       </div>
     </section>
@@ -59,13 +52,13 @@
     <section class="section section--tint">
       <div class="wrap">
         <div class="section__head reveal">
-          <p class="eyebrow">Minik ailemiz</p>
-          <h2 class="h2">Hepsi tek tek, elde</h2>
+          <p class="eyebrow"><%= t.home.galleryEyebrow %></p>
+          <h2 class="h2"><%= t.home.galleryTitle %></h2>
         </div>
 
         <div class="gallery">
           <% gallery.forEach(function (product) { %>
-            <a class="gallery__item reveal" href="/<%= product.category === 'bag' ? 'bags' : 'dolls' %>" aria-label="<%= product.name %>">
+            <a class="gallery__item reveal" href="<%= href(product.category === 'bag' ? '/bags' : '/dolls') %>" aria-label="<%= product.name %>">
               <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
             </a>
           <% }); %>
@@ -76,21 +69,17 @@
     <!-- ─────────────────────────── ŞERİT ────────────────────────── -->
     <section class="strip">
       <div class="wrap strip__inner reveal">
-        <!-- REPLACE: üç küçük söz -->
-        <div class="strip__item"><span class="strip__num">01</span><p>Tek tek örülür, asla seri üretim değildir.</p></div>
-        <div class="strip__item"><span class="strip__num">02</span><p>Doğal pamuk ve yün; minik ellere nazik.</p></div>
-        <div class="strip__item"><span class="strip__num">03</span><p>Siparişe özel — sevdiğiniz renkleri söyleyin.</p></div>
+        <div class="strip__item"><span class="strip__num">01</span><p><%= t.home.strip1 %></p></div>
+        <div class="strip__item"><span class="strip__num">02</span><p><%= t.home.strip2 %></p></div>
+        <div class="strip__item"><span class="strip__num">03</span><p><%= t.home.strip3 %></p></div>
       </div>
     </section>
 
     <!-- ─────────────────────── HİKAYE TANITIMI ──────────────────── -->
     <section class="section section--tint">
       <div class="wrap teaser reveal">
-        <blockquote class="pull script">
-          <!-- REPLACE: üretici sözü -->
-          “Her ilmek, acele etmeden, sabırla ve sevgiyle atılıyor.”
-        </blockquote>
-        <a class="btn btn--ghost" href="/story">Hikayemizi okuyun</a>
+        <blockquote class="pull script"><%= t.home.quote %></blockquote>
+        <a class="btn btn--ghost" href="<%= href('/story') %>"><%= t.home.storyCta %></a>
       </div>
     </section>
   </main>

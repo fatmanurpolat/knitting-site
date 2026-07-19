@@ -1,0 +1,49 @@
+# Örgülog — app + Postgres.
+#
+#   ADMIN_PASSWORD=... SESSION_SECRET=... docker compose up -d --build
+#
+# Values default to dev-safe placeholders; override via a .env file or the shell.
+# On first boot the app migrates the schema and seeds the catalog, loading each
+# product photo from /public/images into the database (all product images live
+# in Postgres from then on).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: orgulog
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-orgulog_dev}
+      POSTGRES_DB: orgulog
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orgulog -d orgulog"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgres://orgulog:${DB_PASSWORD:-orgulog_dev}@db:5432/orgulog
+      # Dashboard (single user). CHANGE THESE in production.
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      SESSION_SECRET: ${SESSION_SECRET:-dev-insecure-secret-change-me-please-32chars}
+      # Brand
+      BRAND_NAME: ${BRAND_NAME:-Örgülog}
+      BRAND_INSTAGRAM: ${BRAND_INSTAGRAM:-https://www.instagram.com/orgulog2/}
+      BRAND_WHATSAPP: ${BRAND_WHATSAPP:-https://wa.me/905387277185}
+      BRAND_EMAIL: ${BRAND_EMAIL:-hello@orgulog.example}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

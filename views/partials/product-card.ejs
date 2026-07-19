@@ -1,34 +1,41 @@
 <%
   // Purchase flow (no on-site payment):
   //  • If a shop listing exists → primary button links out to Etsy/Amazon.
-  //  • Otherwise → primary button opens a direct message to order.
+  //  • Otherwise → primary button opens WhatsApp (or Instagram) to order.
   //  • Instagram + WhatsApp are always offered for questions.
   var listed = product.etsyUrl && product.etsyUrl !== '#etsy-link';
-  var shopLabel = /amazon\./i.test(product.etsyUrl) ? "Amazon'dan al"
-                 : /etsy\./i.test(product.etsyUrl) ? "Etsy'den al"
-                 : 'Ürünü incele';
+  var shopLabel = /amazon\./i.test(product.etsyUrl) ? t.card.shopAmazon
+                 : /etsy\./i.test(product.etsyUrl) ? t.card.shopEtsy
+                 : t.card.shopGeneric;
   var ig = (product.instagramUrl && product.instagramUrl !== '#instagram-dm')
              ? product.instagramUrl : brand.instagramUrl;
   var hasWhatsapp = brand.whatsappUrl && brand.whatsappUrl !== '#whatsapp';
 %>
 <article class="card reveal">
   <div class="card__media">
-    <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
+    <% if (product.image) { %>
+      <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
+    <% } else { %>
+      <div class="card__media-empty"><%= t.card.noImage %></div>
+    <% } %>
   </div>
   <div class="card__body">
     <h3 class="card__name"><%= product.name %></h3>
+    <% if (product.priceCents > 0) { %>
+      <p class="card__price"><%= formatPrice(product.priceCents, product.currency) %></p>
+    <% } %>
     <p class="card__desc"><%= product.description %></p>
 
     <div class="card__actions">
       <% if (listed) { %>
         <a class="btn btn--sm" href="<%= product.etsyUrl %>" target="_blank" rel="noopener"><%= shopLabel %></a>
       <% } else { %>
-        <a class="btn btn--sm" href="<%= hasWhatsapp ? brand.whatsappUrl : ig %>" target="_blank" rel="noopener">Sipariş için yazın</a>
+        <a class="btn btn--sm" href="<%= hasWhatsapp ? brand.whatsappUrl : ig %>" target="_blank" rel="noopener"><%= t.card.order %></a>
       <% } %>
     </div>
 
     <p class="card__inquire">
-      Sorular için:
+      <%= t.card.questions %>
       <a href="<%= ig %>" target="_blank" rel="noopener">Instagram</a><% if (hasWhatsapp) { %>
       · <a href="<%= brand.whatsappUrl %>" target="_blank" rel="noopener">WhatsApp</a><% } %>
     </p>

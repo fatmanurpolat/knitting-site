@@ -44,26 +44,25 @@ can be added later once there's traction.
 ```
 src/
 ├── domain/                     the core — no framework, no I/O
-│   ├── model/                  Product, ProductCategory
+│   ├── model/                  Product (+ ProductInput), ProductCategory
 │   └── ports/
-│       ├── in/  CatalogQueries.ts     (driving port — what the app offers)
-│       └── out/ ProductRepository.ts  (driven port — what the app needs)
+│       ├── in/  CatalogQueries (reads) · CatalogAdmin (dashboard writes)
+│       └── out/ ProductRepository (reads+writes) · ImageStore (bytes)
 ├── application/
-│   └── CatalogService.ts       use cases; implements the inbound port
+│   ├── CatalogService.ts       reads; implements CatalogQueries
+│   └── AdminService.ts         writes/validation; implements CatalogAdmin
 ├── adapters/
-│   ├── in/web/                 DRIVING adapter: Fastify + EJS (dynamic server)
-│   │   ├── server.ts           build the app (headers, views, static)
-│   │   ├── routes/pages.ts     the 5 page handlers (thin)
-│   │   └── viewModel.ts        shared page data (brand, nav)
-│   ├── in/static-site/         DRIVING adapter: renders EJS → static HTML
-│   │   └── generate.ts         `npm run generate` → dist-site/ (free hosting)
-│   └── out/persistence/        DRIVEN adapter
-│       ├── InMemoryProductRepository.ts
-│       └── catalog.seed.ts     the placeholder products (edit here!)
+│   ├── in/web/                 DRIVING: Fastify + EJS (pages, /media/:id)
+│   ├── in/admin/               DRIVING: single-user dashboard (auth, CRUD, upload)
+│   ├── in/static-site/         DRIVING: renders EJS → static HTML (no-DB mode)
+│   └── out/persistence/        DRIVEN adapters
+│       ├── Postgres{ProductRepository,ImageStore}.ts + db.ts (migrate/seed)
+│       ├── InMemory{ProductRepository,ImageStore}.ts   (no-DB fallback)
+│       └── catalog.seed.ts     starter catalog (+ image files → DB on seed)
 └── infrastructure/
-    ├── config.ts               env → typed config
-    ├── container.ts            composition root (wires ports ⇄ adapters)
-    └── ../main.ts              entrypoint (listen + graceful shutdown)
+    ├── config.ts               env → typed config (brand, db, admin)
+    ├── container.ts            composition root — picks Postgres or in-memory
+    └── ../main.ts              entrypoint (migrate → listen → graceful shutdown)
 ```
 
 **The rule:** `domain` and `application` never import from `adapters` or a
@@ -99,7 +98,38 @@ npm run preview:site # generate + serve dist-site/ locally
 ```
 
 Config comes from the environment (see `.env.example`); sensible defaults are
-built in, so `npm run dev` works with zero setup.
+built in, so `npm run dev` works with zero setup (in-memory catalog, file images).
+
+---
+
+## Dashboard & database (Docker)
+
+A very simple **single-user dashboard** manages products — names, prices,
+descriptions, links and **image uploads** — backed by **Postgres**. All product
+images are stored in the database (a `bytea` column) and served from
+`/media/:id`; prices show on the product cards.
+
+```bash
+ADMIN_PASSWORD=your-secret SESSION_SECRET=a-long-random-string \
+  docker compose up -d --build
+```
+
+- App: <http://localhost:3000> · Dashboard: <http://localhost:3000/admin>
+  (user `admin`, password from `ADMIN_PASSWORD`).
+- On first boot the app migrates the schema and **seeds** the catalog, loading
+  each starter photo from `public/images` into the DB. From then on product
+  images come from Postgres.
+- Set the real product **prices** and swap photos from the dashboard.
+
+How storage is chosen: if `DATABASE_URL` is set (as in `docker-compose.yml`) the
+app uses **Postgres** and enables the dashboard; otherwise it falls back to the
+in-memory seed with file images (handy for the static generator).
+
+Environment (see `.env.example` / `docker-compose.yml`): `DATABASE_URL`,
+`ADMIN_USER`, `ADMIN_PASSWORD`, `SESSION_SECRET`, plus the `BRAND_*` values.
+
+> The dashboard makes the site dynamic; the static generator (`npm run generate`)
+> is only for the no-DB / file-image mode, since it can't serve `/media/:id`.
 
 ---
 

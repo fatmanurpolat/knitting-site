@@ -1,6 +1,6 @@
 <header class="site-header" data-nav>
   <div class="wrap site-header__inner">
-    <a class="brand" href="/">
+    <a class="brand" href="<%= href('/') %>">
       <span class="brand__mark" aria-hidden="true">
         <!-- little crochet-loop mark -->
         <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
@@ -11,11 +11,11 @@
       <span class="brand__name"><%= brand.name %></span>
     </a>
 
-    <button class="nav-toggle" data-nav-toggle aria-label="Menüyü aç" aria-expanded="false" aria-controls="site-nav">
+    <button class="nav-toggle" data-nav-toggle aria-label="<%= t.nav.menuOpen %>" aria-expanded="false" aria-controls="site-nav">
       <span></span><span></span><span></span>
     </button>
 
-    <nav class="site-nav" id="site-nav" data-nav-menu aria-label="Ana menü">
+    <nav class="site-nav" id="site-nav" data-nav-menu aria-label="<%= t.nav.menuLabel %>">
       <ul>
         <% nav.forEach(function (item) { %>
           <li>
@@ -27,6 +27,28 @@
           </li>
         <% }); %>
       </ul>
+
+      <details class="lang" data-lang>
+        <summary class="lang__toggle" aria-label="<%= t.nav.langLabel %>">
+          <svg class="lang__globe" viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+            <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+          <span class="lang__current"><%= locale.toUpperCase() %></span>
+          <svg class="lang__chev" viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </summary>
+        <ul class="lang__menu">
+          <% langLinks.forEach(function (l) { %>
+            <li>
+              <a href="<%= l.href %>" hreflang="<%= l.locale %>"
+                 class="lang__link<%= l.active ? ' is-active' : '' %>"
+                 <%= l.active ? 'aria-current="true"' : '' %>><%= l.label %></a>
+            </li>
+          <% }); %>
+        </ul>
+      </details>
     </nav>
   </div>
 </header>

@@ -69,9 +69,26 @@
     });
   }
 
+  /* ---- 3. language dropdown (native <details>) -------------------------- */
+  function initLang() {
+    var lang = document.querySelector('details[data-lang]');
+    if (!lang) return;
+
+    // Close when clicking outside the dropdown.
+    document.addEventListener('click', function (e) {
+      if (lang.open && !lang.contains(e.target)) lang.open = false;
+    });
+
+    // Close on Escape.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') lang.open = false;
+    });
+  }
+
   function init() {
     initReveal();
     initMenu();
+    initLang();
   }
 
   if (document.readyState === 'loading') {

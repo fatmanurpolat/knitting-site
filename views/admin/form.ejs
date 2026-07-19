@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('_head', { title: mode === 'edit' ? 'Ürünü düzenle' : 'Yeni ürün' }) %>
+</head>
+<body class="admin">
+  <header class="admin-bar">
+    <div class="admin-bar__inner">
+      <a class="admin-bar__brand" href="/admin"><%= brandName %> · Panel</a>
+      <nav class="admin-bar__nav">
+        <a href="/admin">← Ürünler</a>
+        <form method="post" action="/admin/logout"><button class="linkbtn" type="submit">Çıkış</button></form>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main admin-main--narrow">
+    <h1><%= mode === 'edit' ? 'Ürünü düzenle' : 'Yeni ürün' %></h1>
+    <% if (error) { %><p class="auth-error"><%= error %></p><% } %>
+
+    <form method="post" action="<%= action %>" enctype="multipart/form-data" class="stack form">
+      <fieldset class="i18n-group">
+        <legend>İsim</legend>
+        <label>Türkçe *
+          <input type="text" name="name" value="<%= product.translations.tr.name %>" required />
+        </label>
+        <label>English
+          <input type="text" name="name_en" value="<%= product.translations.en.name %>" placeholder="English name" />
+        </label>
+        <label>Deutsch
+          <input type="text" name="name_de" value="<%= product.translations.de.name %>" placeholder="Deutscher Name" />
+        </label>
+      </fieldset>
+
+      <fieldset class="i18n-group">
+        <legend>Açıklama</legend>
+        <label>Türkçe
+          <textarea name="description" rows="3"><%= product.translations.tr.description %></textarea>
+        </label>
+        <label>English
+          <textarea name="description_en" rows="3" placeholder="English description"><%= product.translations.en.description %></textarea>
+        </label>
+        <label>Deutsch
+          <textarea name="description_de" rows="3" placeholder="Deutsche Beschreibung"><%= product.translations.de.description %></textarea>
+        </label>
+      </fieldset>
+
+      <div class="row">
+        <label>Kategori *
+          <select name="category">
+            <option value="doll" <%= product.category === 'doll' ? 'selected' : '' %>>Oyuncak</option>
+            <option value="bag" <%= product.category === 'bag' ? 'selected' : '' %>>Çanta</option>
+          </select>
+        </label>
+        <label>Fiyat (₺)
+          <input type="text" inputmode="decimal" name="price"
+                 value="<%= product.priceCents ? (product.priceCents / 100) : '' %>" placeholder="örn. 250" />
+        </label>
+        <label>Sıra
+          <input type="number" name="order" value="<%= product.order || '' %>" placeholder="oto" />
+        </label>
+      </div>
+
+      <label>Slug (boş bırakırsan isimden üretilir)
+        <input type="text" name="slug" value="<%= product.slug %>" placeholder="ornek-urun" />
+      </label>
+
+      <div class="row">
+        <label>Etsy / Amazon linki
+          <input type="url" name="etsyUrl" value="<%= product.etsyUrl === '#etsy-link' ? '' : product.etsyUrl %>" placeholder="https://" />
+        </label>
+        <label>Instagram linki
+          <input type="url" name="instagramUrl" value="<%= product.instagramUrl === '#instagram-dm' ? '' : product.instagramUrl %>" placeholder="https://" />
+        </label>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" name="featured" value="on" <%= product.featured ? 'checked' : '' %> />
+        Ana sayfada öne çıkar
+      </label>
+
+      <div class="field-image">
+        <label>Görsel <%= mode === 'edit' ? '(değiştirmek istemiyorsan boş bırak)' : '' %>
+          <input type="file" name="image" accept="image/*" />
+        </label>
+        <% if (product.image) { %>
+          <div class="image-preview"><img src="<%= product.image %>" alt="Mevcut görsel" /></div>
+        <% } %>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn" type="submit">Kaydet</button>
+        <a class="btn btn--ghost" href="/admin">Vazgeç</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
