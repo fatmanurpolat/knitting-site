@@ -33,8 +33,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run generate
-        # env:
-        #   BASE_PATH: "/${{ github.event.repository.name }}"
+        env:
+          # Absolute origin for links (product URL in the WhatsApp order message, og:image).
+          SITE_URL: "https://orgulog.site"
+          # BASE_PATH: "/${{ github.event.repository.name }}"  # only for project sub-path sites
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist-site

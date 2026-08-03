@@ -356,11 +356,13 @@ code {
   transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 .card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
-.card__media { aspect-ratio: 1 / 1; overflow: hidden; background: var(--tint); }
+.card__media { display: block; aspect-ratio: 1 / 1; overflow: hidden; background: var(--tint); }
 .card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s var(--ease); }
 .card:hover .card__media img { transform: scale(1.05); }
 .card__body { padding: 1.4rem 1.5rem 1.6rem; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 .card__name { font-family: var(--font-display); font-size: 1.5rem; margin: 0; }
+.card__name-link { color: inherit; text-decoration: none; }
+.card__name-link:hover { color: var(--clay); }
 .card__price { font-weight: 700; color: var(--clay-deep); margin: 0; font-size: 1.05rem; }
 .card__media-empty {
   width: 100%; height: 100%;
@@ -381,6 +383,46 @@ code {
 .card__inquire a:hover { border-color: var(--clay); }
 
 .empty { text-align: center; color: var(--muted); font-size: 1.2rem; padding: 3rem 0; }
+
+/* ---- single product page ------------------------------------------------ */
+.product-page { padding-top: clamp(1.5rem, 4vw, 2.5rem); }
+.product__back {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.product__back:hover { color: var(--clay); }
+.product {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+.product__media {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--tint);
+  aspect-ratio: 1 / 1;
+  box-shadow: var(--shadow);
+}
+.product__media img { width: 100%; height: 100%; object-fit: cover; }
+.product__info { display: flex; flex-direction: column; gap: 0.9rem; }
+.product__name { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.8rem); margin: 0; }
+.product__price { font-weight: 700; color: var(--clay-deep); font-size: 1.3rem; margin: 0; }
+.product__desc { color: var(--muted); font-size: 1.05rem; line-height: 1.7; margin: 0; }
+.product__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+}
+@media (max-width: 720px) {
+  .product { grid-template-columns: 1fr; }
+}
 
 /* ---- home photo gallery ------------------------------------------------- */
 .gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; }

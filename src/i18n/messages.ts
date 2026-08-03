@@ -43,7 +43,16 @@ export interface Messages {
     gridEyebrow: string; gridTitle: string; gridAlt: string;
   };
   notFound: { eyebrow: string; title: string; leadPre: string; leadPost: string; backHome: string; seeDolls: string };
-  card: { noImage: string; shopAmazon: string; shopEtsy: string; shopGeneric: string; order: string; questions: string };
+  card: { noImage: string; shopAmazon: string; shopEtsy: string; shopGeneric: string; order: string; view: string; questions: string };
+  /** The single-product page. */
+  product: {
+    /** Back-to-category link prefix, e.g. "← ". The category name follows. */
+    backPrefix: string;
+    orderWhatsapp: string;
+    orderInstagram: string;
+    /** Prefilled WhatsApp message. `{product}` is replaced with the piece's name. */
+    waMessage: string;
+  };
 }
 
 const tr: Messages = {
@@ -120,7 +129,13 @@ const tr: Messages = {
   },
   card: {
     noImage: 'görsel yok', shopAmazon: 'Amazon’dan al', shopEtsy: 'Etsy’den al', shopGeneric: 'Ürünü incele',
-    order: 'Sipariş için yazın', questions: 'Sorular için:',
+    order: 'Sipariş için yazın', view: 'Ürünü incele', questions: 'Sorular için:',
+  },
+  product: {
+    backPrefix: '← ',
+    orderWhatsapp: 'WhatsApp’tan sipariş ver',
+    orderInstagram: 'Instagram’dan sor',
+    waMessage: 'Merhaba! “{product}” ürününü sipariş etmek istiyorum.',
   },
 };
 
@@ -198,7 +213,13 @@ const en: Messages = {
   },
   card: {
     noImage: 'no image', shopAmazon: 'Buy on Amazon', shopEtsy: 'Buy on Etsy', shopGeneric: 'View the piece',
-    order: 'Message to order', questions: 'Questions:',
+    order: 'Message to order', view: 'View product', questions: 'Questions:',
+  },
+  product: {
+    backPrefix: '← ',
+    orderWhatsapp: 'Order on WhatsApp',
+    orderInstagram: 'Ask on Instagram',
+    waMessage: 'Hello! I’d like to order the “{product}”.',
   },
 };
 
@@ -276,7 +297,13 @@ const de: Messages = {
   },
   card: {
     noImage: 'kein Bild', shopAmazon: 'Auf Amazon kaufen', shopEtsy: 'Auf Etsy kaufen', shopGeneric: 'Zum Produkt',
-    order: 'Zum Bestellen schreiben', questions: 'Fragen:',
+    order: 'Zum Bestellen schreiben', view: 'Produkt ansehen', questions: 'Fragen:',
+  },
+  product: {
+    backPrefix: '← ',
+    orderWhatsapp: 'Auf WhatsApp bestellen',
+    orderInstagram: 'Auf Instagram fragen',
+    waMessage: 'Hallo! Ich möchte das „{product}“ bestellen.',
   },
 };
 

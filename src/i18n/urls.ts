@@ -1,4 +1,5 @@
 import { DEFAULT_LOCALE, isLocale, Locale } from '../domain/model/Locale';
+import { ProductCategory } from '../domain/model/ProductCategory';
 
 /**
  * URL structure for the three languages. Turkish (the default) has no prefix;
@@ -27,6 +28,19 @@ export function localizeHref(locale: Locale, path: string): string {
   const prefix = localePrefix(locale);
   if (!prefix) return path;
   return path === '/' ? `${prefix}/` : `${prefix}${path}`;
+}
+
+/**
+ * The category page a product lives under: dolls or bags. Its detail page hangs
+ * off that segment, e.g. a doll with slug "maymun-momo" → /dolls/maymun-momo.
+ */
+export function categorySegment(category: ProductCategory): 'dolls' | 'bags' {
+  return category === 'bag' ? 'bags' : 'dolls';
+}
+
+/** Default-locale path to a product's own page, e.g. '/dolls/maymun-momo'. */
+export function productPath(category: ProductCategory, slug: string): string {
+  return `/${categorySegment(category)}/${slug}`;
 }
 
 /**

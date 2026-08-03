@@ -1,9 +1,15 @@
 <%
-  // Per-page <title> and meta description, from the localized messages.
-  // An empty meta title means "use the brand name alone" (the home page).
+  // Per-page <title> and meta description, from the localized messages. Pages can
+  // override with `metaTitle` / `metaDescription` locals (e.g. a product page uses
+  // the piece's own name + description). An empty meta title means "brand only".
   const m = t.meta[activePage] || t.meta.home;
-  const pageTitle = m.title ? m.title + ' · ' + brand.name : brand.name;
-  const pageDesc = m.description.replace('{brand}', brand.name);
+  const ttlOverride = (typeof metaTitle !== 'undefined' && metaTitle) ? metaTitle : '';
+  const pageTitle = ttlOverride ? ttlOverride + ' · ' + brand.name
+                  : m.title ? m.title + ' · ' + brand.name
+                  : brand.name;
+  const pageDesc = ((typeof metaDescription !== 'undefined' && metaDescription)
+                    ? metaDescription : m.description).replace('{brand}', brand.name);
+  const pageOgImage = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : '';
   const ogLocale = { tr: 'tr_TR', en: 'en_US', de: 'de_DE' }[locale] || 'tr_TR';
 %>
 <meta charset="utf-8" />
@@ -17,11 +23,12 @@
 <link rel="alternate" hreflang="<%= l.locale %>" href="<%= l.href %>" />
 <% }); %>
 
-<!-- Open Graph (nice link previews when shared) -->
+<!-- Open Graph (nice link previews when shared, e.g. a product sent on WhatsApp) -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="<%= pageTitle %>" />
 <meta property="og:description" content="<%= pageDesc %>" />
 <meta property="og:locale" content="<%= ogLocale %>" />
+<% if (pageOgImage) { %><meta property="og:image" content="<%= pageOgImage %>" /><% } %>
 
 <!--
   Fonts load from Google Fonts and need an internet connection on the

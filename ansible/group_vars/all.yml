@@ -15,6 +15,10 @@ app_port: 3000 # internal port the Node app binds to (the reverse proxy forwards
 # gateway; ufw still blocks 3000 from the internet (only 22/80/443 are open).
 app_host: "0.0.0.0"
 
+# Public origin (no trailing slash) for absolute links — e.g. the product page
+# URL added to the prefilled WhatsApp order message. Defaults to the site domain.
+site_url: "https://{{ server_name }}"
+
 # This server's edge is the existing Klip Caddy (owns 80/443), so we do NOT
 # install a second host nginx. Set true only on a dedicated/fresh box.
 manage_nginx: false
@@ -37,7 +41,34 @@ db_name: "{{ app_name }}"
 db_user: "{{ app_name }}"
 database_url: "postgres://{{ db_user }}:{{ db_password }}@localhost:5432/{{ db_name }}"
 
+# ── Backups ─────────────────────────────────────────────────────────────────
+# The dashboard's Postgres holds everything the owner edits (prices, custom
+# product photos, translations) — none of it is in git. The backup role dumps it
+# daily with pg_dump (compressed + verified) into `backup_dir` and keeps
+# `backup_retention_days` of dumps. Restore: `orgulog-restore <dump>` (see README).
+backup_enabled: true
+backup_dir: "/var/backups/{{ app_name }}"
+backup_retention_days: 30 # local-only, so keep a long history of recovery points
+backup_on_calendar: "*-*-* 03:30:00" # systemd OnCalendar — daily at 03:30 server time
+
+# Offsite copy over SSH/rsync — currently DISABLED (only one server available).
+# WARNING: with offsite off, backups live on the SAME disk as the database, so a
+# disk failure or total server loss takes both at once. This still protects against
+# accidental deletes, bad edits and logical corruption — but NOT catastrophic loss.
+# To enable later, set backup_remote_enabled: true and point host/user/path at a
+# DIFFERENT machine (never 194.146.36.67 — that is this app server itself).
+backup_remote_enabled: false
+backup_remote_host: "" # a DIFFERENT host than the app server (storage box / second VPS)
+backup_remote_user: "orgulog-backup" # a user that exists on the offsite host
+backup_remote_path: "/srv/backups/orgulog" # existing, writable dir on the offsite host
+backup_remote_port: 22
+backup_remote_delete: false # false = offsite keeps every dump (safest); true = mirror local retention
+backup_ssh_key: "/root/.ssh/orgulog_backup" # dedicated key generated on the server
+
 # ── nginx / TLS ───────────────────────────────────────────────────────────────
-server_name: "orgulog.fatmanur.xyz"
+# Public domain. The live edge is the Klip Caddy (see manage_nginx above), which
+# serves the landing on orgulog.site and the dashboard on dashboard.orgulog.site;
+# this var only matters if the built-in nginx role is ever enabled.
+server_name: "orgulog.site"
 enable_tls: true # DNS zaten sunucuya işaret ediyor → Let's Encrypt sertifikası al
 certbot_email: "polatnur77@gmail.com"

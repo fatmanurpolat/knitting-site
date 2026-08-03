@@ -13,6 +13,12 @@ export interface AppConfig {
   readonly viewsDir: string;
   /** Absolute path to the static assets directory (css/js/images). */
   readonly publicDir: string;
+  /**
+   * Public origin of the site, e.g. "https://orgulog.site" (no trailing slash).
+   * Used to build absolute links (e.g. the product URL added to the prefilled
+   * WhatsApp order message). Empty when unknown — links then omit the URL.
+   */
+  readonly siteUrl: string;
   /** Brand identity surfaced to every template. */
   readonly brand: BrandConfig;
   /** Database. If `url` is unset the app falls back to the in-memory seed. */
@@ -58,6 +64,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port: toInt(env.PORT, 3000),
     viewsDir: env.VIEWS_DIR ?? path.join(projectRoot, 'views'),
     publicDir: env.PUBLIC_DIR ?? path.join(projectRoot, 'public'),
+    siteUrl: (env.SITE_URL ?? '').replace(/\/+$/, ''),
     brand: {
       // REPLACE: brand basics (also settable via env for the future dashboard).
       name: env.BRAND_NAME ?? 'Örgülog',

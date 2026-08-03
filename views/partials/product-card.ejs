@@ -1,37 +1,29 @@
 <%
-  // Purchase flow (no on-site payment):
-  //  • If a shop listing exists → primary button links out to Etsy/Amazon.
-  //  • Otherwise → primary button opens WhatsApp (or Instagram) to order.
-  //  • Instagram + WhatsApp are always offered for questions.
-  var listed = product.etsyUrl && product.etsyUrl !== '#etsy-link';
-  var shopLabel = /amazon\./i.test(product.etsyUrl) ? t.card.shopAmazon
-                 : /etsy\./i.test(product.etsyUrl) ? t.card.shopEtsy
-                 : t.card.shopGeneric;
+  // The whole card (photo + name + button) leads to the piece's own page, where
+  // the visitor orders it via WhatsApp/Instagram with the piece referenced.
+  // Instagram + WhatsApp stay offered inline for quick questions.
+  var productHref = href((product.category === 'bag' ? '/bags' : '/dolls') + '/' + product.slug);
   var ig = (product.instagramUrl && product.instagramUrl !== '#instagram-dm')
              ? product.instagramUrl : brand.instagramUrl;
   var hasWhatsapp = brand.whatsappUrl && brand.whatsappUrl !== '#whatsapp';
 %>
 <article class="card reveal">
-  <div class="card__media">
+  <a class="card__media" href="<%= productHref %>" aria-label="<%= product.name %>">
     <% if (product.image) { %>
       <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
     <% } else { %>
       <div class="card__media-empty"><%= t.card.noImage %></div>
     <% } %>
-  </div>
+  </a>
   <div class="card__body">
-    <h3 class="card__name"><%= product.name %></h3>
+    <h3 class="card__name"><a class="card__name-link" href="<%= productHref %>"><%= product.name %></a></h3>
     <% if (product.priceCents > 0) { %>
       <p class="card__price"><%= formatPrice(product.priceCents, product.currency) %></p>
     <% } %>
     <p class="card__desc"><%= product.description %></p>
 
     <div class="card__actions">
-      <% if (listed) { %>
-        <a class="btn btn--sm" href="<%= product.etsyUrl %>" target="_blank" rel="noopener"><%= shopLabel %></a>
-      <% } else { %>
-        <a class="btn btn--sm" href="<%= hasWhatsapp ? brand.whatsappUrl : ig %>" target="_blank" rel="noopener"><%= t.card.order %></a>
-      <% } %>
+      <a class="btn btn--sm" href="<%= productHref %>"><%= t.card.view %></a>
     </div>
 
     <p class="card__inquire">

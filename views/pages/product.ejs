@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="<%= locale %>">
+<head>
+  <%- include('../partials/head') %>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <%
+    // Back to the piece's category listing (Toys / Bags).
+    var backHref = href(product.category === 'bag' ? '/bags' : '/dolls');
+    var backLabel = product.category === 'bag' ? t.nav.bags : t.nav.dolls;
+  %>
+  <main>
+    <section class="section product-page">
+      <div class="wrap">
+        <a class="product__back" href="<%= backHref %>"><%= t.product.backPrefix %><%= backLabel %></a>
+
+        <div class="product reveal">
+          <div class="product__media">
+            <% if (product.image) { %>
+              <img src="<%= product.image %>" alt="<%= product.name %>" />
+            <% } else { %>
+              <div class="card__media-empty"><%= t.card.noImage %></div>
+            <% } %>
+          </div>
+
+          <div class="product__info">
+            <p class="eyebrow"><%= backLabel %></p>
+            <h1 class="product__name"><%= product.name %></h1>
+            <% if (product.priceCents > 0) { %>
+              <p class="product__price"><%= formatPrice(product.priceCents, product.currency) %></p>
+            <% } %>
+            <p class="product__desc"><%= product.description %></p>
+
+            <!-- Order this specific piece: WhatsApp carries a prefilled message
+                 naming the piece; Instagram opens its post/profile. -->
+            <div class="product__actions">
+              <% if (orderLinks.whatsapp) { %>
+                <a class="btn" href="<%= orderLinks.whatsapp %>" target="_blank" rel="noopener"><%= t.product.orderWhatsapp %></a>
+              <% } %>
+              <a class="btn <%= orderLinks.whatsapp ? 'btn--ghost' : '' %>" href="<%= orderLinks.instagram %>" target="_blank" rel="noopener"><%= t.product.orderInstagram %></a>
+              <% if (orderLinks.shop) { %>
+                <a class="btn btn--ghost" href="<%= orderLinks.shop.href %>" target="_blank" rel="noopener"><%= orderLinks.shop.label %></a>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

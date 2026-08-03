@@ -1,7 +1,8 @@
 import { AppConfig } from '../../../infrastructure/config';
 import { Locale, LOCALES } from '../../../domain/model/Locale';
 import { getMessages, Messages } from '../../../i18n/messages';
-import { localizeHref } from '../../../i18n/urls';
+import { localizeHref, productPath } from '../../../i18n/urls';
+import { Product } from '../../../domain/model/Product';
 
 export type PageKey = 'home' | 'story' | 'dolls' | 'bags' | 'contact';
 
@@ -70,6 +71,97 @@ export function makeFormatPrice(locale: Locale): (cents: number, currency: strin
 
 /** Turkish price formatter, kept for the (Turkish-only) admin dashboard. */
 export const formatPrice = makeFormatPrice('tr');
+
+/** Placeholder values the seed uses for "not set" — treated as absent. */
+const NOT_LISTED = new Set(['', '#etsy-link']);
+const NO_INSTAGRAM = new Set(['', '#instagram-dm']);
+const NO_WHATSAPP = new Set(['', '#whatsapp']);
+
+/** The order/contact links shown on a product's page, resolved for that piece. */
+export interface OrderLinks {
+  /** External shop listing (Etsy/Amazon/…) when the piece is listed, else null. */
+  shop: { href: string; label: string } | null;
+  /** wa.me link carrying a prefilled, piece-specific message — null if WhatsApp is off. */
+  whatsapp: string | null;
+  /** Instagram link: the piece's own post if it has one, otherwise the brand profile. */
+  instagram: string;
+}
+
+/**
+ * Build the order links for a single product. Shared by the Fastify server and
+ * the static generator so both emit identical URLs. `productUrl` is the piece's
+ * absolute page URL; when provided it's appended to the WhatsApp message so the
+ * maker sees exactly which piece is meant (omitted when the site origin is
+ * unknown — the message still names the piece).
+ */
+export function buildOrderLinks(
+  product: Product,
+  brand: AppConfig['brand'],
+  t: Messages,
+  productUrl = '',
+): OrderLinks {
+  const shop = !NOT_LISTED.has(product.etsyUrl)
+    ? {
+        href: product.etsyUrl,
+        label: /amazon\./i.test(product.etsyUrl)
+          ? t.card.shopAmazon
+          : /etsy\./i.test(product.etsyUrl)
+            ? t.card.shopEtsy
+            : t.card.shopGeneric,
+      }
+    : null;
+
+  const instagram = !NO_INSTAGRAM.has(product.instagramUrl)
+    ? product.instagramUrl
+    : brand.instagramUrl;
+
+  let whatsapp: string | null = null;
+  if (!NO_WHATSAPP.has(brand.whatsappUrl)) {
+    const message =
+      t.product.waMessage.replace('{product}', product.name) + (productUrl ? `\n${productUrl}` : '');
+    const sep = brand.whatsappUrl.includes('?') ? '&' : '?';
+    whatsapp = `${brand.whatsappUrl}${sep}text=${encodeURIComponent(message)}`;
+  }
+
+  return { shop, whatsapp, instagram };
+}
+
+/**
+ * Everything the single-product template needs beyond the base view model:
+ * the piece, its resolved order links, and product-specific meta/OG tags (so a
+ * shared product link previews with its own title, description and photo). The
+ * Fastify server and the static generator both call this, so a product page is
+ * identical whichever renders it.
+ */
+export function productViewData(
+  product: Product,
+  config: AppConfig,
+  locale: Locale,
+  t: Messages,
+): {
+  product: Product;
+  orderLinks: OrderLinks;
+  metaTitle: string;
+  metaDescription: string;
+  ogImage: string;
+} {
+  const productUrl = config.siteUrl
+    ? config.siteUrl + localizeHref(locale, productPath(product.category, product.slug))
+    : '';
+  const ogImage =
+    config.siteUrl && product.image
+      ? product.image.startsWith('http')
+        ? product.image
+        : config.siteUrl + product.image
+      : '';
+  return {
+    product,
+    orderLinks: buildOrderLinks(product, config.brand, t, productUrl),
+    metaTitle: product.name,
+    metaDescription: product.description,
+    ogImage,
+  };
+}
 
 export function baseViewModel(
   config: AppConfig,

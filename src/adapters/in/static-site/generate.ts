@@ -4,9 +4,10 @@ import ejs from 'ejs';
 import { loadConfig, AppConfig } from '../../../infrastructure/config';
 import { buildContainer } from '../../../infrastructure/container';
 import { CatalogQueries } from '../../../domain/ports/in/CatalogQueries';
-import { Locale, LOCALES } from '../../../domain/model/Locale';
-import { localePrefix } from '../../../i18n/urls';
-import { baseViewModel, PageKey } from '../web/viewModel';
+import { DEFAULT_LOCALE, Locale, LOCALES } from '../../../domain/model/Locale';
+import { getMessages } from '../../../i18n/messages';
+import { categorySegment, localePrefix } from '../../../i18n/urls';
+import { baseViewModel, productViewData, PageKey } from '../web/viewModel';
 
 /**
  * Driving (inbound) adapter: a static-site generator.
@@ -34,8 +35,8 @@ interface PageSpec {
   data: (locale: Locale) => Promise<Record<string, unknown>>; // page-specific view data
 }
 
-function pageSpecs(catalog: CatalogQueries): PageSpec[] {
-  return [
+async function pageSpecs(catalog: CatalogQueries, config: AppConfig): Promise<PageSpec[]> {
+  const specs: PageSpec[] = [
     {
       out: 'index.html',
       view: 'pages/home.ejs',
@@ -70,6 +71,27 @@ function pageSpecs(catalog: CatalogQueries): PageSpec[] {
       data: async () => ({ requestedPath: '' }),
     },
   ];
+
+  // One detail page per piece: /dolls/<slug> and /bags/<slug>, each written to a
+  // matching subfolder so the URL structure mirrors the Fastify server exactly.
+  const [dolls, bags] = await Promise.all([
+    catalog.listByCategory('doll', DEFAULT_LOCALE),
+    catalog.listByCategory('bag', DEFAULT_LOCALE),
+  ]);
+  for (const product of [...dolls, ...bags]) {
+    const segment = categorySegment(product.category);
+    specs.push({
+      out: `${segment}/${product.slug}.html`,
+      view: 'pages/product.ejs',
+      page: segment,
+      data: async (locale) => {
+        const localized = (await catalog.getBySlug(product.slug, locale)) ?? product;
+        return productViewData(localized, config, locale, getMessages(locale));
+      },
+    });
+  }
+
+  return specs;
 }
 
 async function copyDir(src: string, dest: string): Promise<void> {
@@ -102,7 +124,7 @@ async function generate(config: AppConfig, outDir: string): Promise<void> {
   const basePath = process.env.BASE_PATH ?? '';
   const container = await buildContainer(config);
   try {
-    const specs = pageSpecs(container.catalog);
+    const specs = await pageSpecs(container.catalog, config);
     const year = new Date().getFullYear();
 
     await fs.rm(outDir, { recursive: true, force: true });
@@ -117,7 +139,9 @@ async function generate(config: AppConfig, outDir: string): Promise<void> {
         const templatePath = path.join(config.viewsDir, spec.view);
         const data = { ...baseViewModel(config, spec.page, year, locale), ...(await spec.data(locale)) };
         const html = applyBasePath(await ejs.renderFile(templatePath, data), basePath);
-        await fs.writeFile(path.join(localeDir, spec.out), html, 'utf8');
+        const outPath = path.join(localeDir, spec.out);
+        await fs.mkdir(path.dirname(outPath), { recursive: true }); // product pages live in dolls/ & bags/
+        await fs.writeFile(outPath, html, 'utf8');
         console.log(`  ✓ ${prefix ? `${locale}/` : ''}${spec.out}`);
       }
     }

@@ -32,6 +32,8 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       DATABASE_URL: postgres://orgulog:${DB_PASSWORD:-orgulog_dev}@db:5432/orgulog
+      # Public origin for absolute links (e.g. product URL in the WhatsApp order message).
+      SITE_URL: ${SITE_URL:-}
       # Dashboard (single user). CHANGE THESE in production.
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}

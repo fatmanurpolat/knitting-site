@@ -58,7 +58,7 @@
 
         <div class="gallery">
           <% gallery.forEach(function (product) { %>
-            <a class="gallery__item reveal" href="<%= href(product.category === 'bag' ? '/bags' : '/dolls') %>" aria-label="<%= product.name %>">
+            <a class="gallery__item reveal" href="<%= href((product.category === 'bag' ? '/bags' : '/dolls') + '/' + product.slug) %>" aria-label="<%= product.name %>">
               <img src="<%= product.image %>" alt="<%= product.name %>" loading="lazy" />
             </a>
           <% }); %>
