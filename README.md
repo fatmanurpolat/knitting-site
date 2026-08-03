@@ -232,6 +232,43 @@ systemctl status orgulog
 journalctl -u orgulog -f
 ```
 
+### Backups (dashboard data)
+
+Everything the owner edits (prices, custom product photos, translations) lives
+**only** in Postgres — it is not in git. The `backup` role protects it:
+
+- **Daily `pg_dump`** (compressed custom format, integrity-checked) into
+  `/var/backups/orgulog`, kept for `backup_retention_days` (default 30).
+- Driven by a `systemd` timer (`orgulog-backup.timer`).
+
+This guards against accidental deletes, bad edits and logical corruption. It does
+**not** guard against losing the whole server, because the dumps sit on the same
+disk as the database — for that you need an **offsite copy** (see below).
+
+**Offsite copy (recommended once a second location exists):** set
+`backup_remote_enabled: true` and `backup_remote_host` / `backup_remote_user` /
+`backup_remote_path` in `group_vars/all.yml`, pointing at a **different** machine
+(a storage box or second VPS — never the app server itself). The next
+`ansible-playbook` run prints an SSH public key; add it to the offsite host's
+`~/.ssh/authorized_keys` and every dump is then `rsync`ed there too.
+
+```bash
+systemctl list-timers orgulog-backup.timer   # when it next runs
+systemctl start orgulog-backup.service        # run a backup now
+journalctl -u orgulog-backup.service          # see the last run
+ls -lh /var/backups/orgulog                    # local dumps
+```
+
+**Restore** (as root on the server) — pick a dump and run the helper; it stops
+the app, replaces the database, and restarts:
+
+```bash
+orgulog-restore /var/backups/orgulog/orgulog-YYYYMMDDThhmmssZ.dump
+```
+
+If the whole server is gone, copy a dump back from the offsite host first, then
+run the same command.
+
 ---
 
 ## Notes

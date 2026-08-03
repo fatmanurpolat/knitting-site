@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Schedule the Örgülog database backup
+
+[Timer]
+OnCalendar={{ backup_on_calendar }}
+# Run at next boot if the machine was off at the scheduled time.
+Persistent=true
+# Spread load / avoid an exact-minute thundering herd.
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

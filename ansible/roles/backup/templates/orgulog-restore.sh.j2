@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Restore the Örgülog database from a pg_dump archive. Run as root:
+#   {{ app_name }}-restore /var/backups/{{ app_name }}/{{ app_name }}-YYYYMMDDThhmmssZ.dump
+# Stops the app, replaces the schema/data from the dump, restarts the app.
+set -euo pipefail
+
+if [ -z "${DATABASE_URL:-}" ] && [ -r "/etc/{{ app_name }}/backup.env" ]; then
+  set -a; . "/etc/{{ app_name }}/backup.env"; set +a
+fi
+: "${DATABASE_URL:?DATABASE_URL not set}"
+
+dump="${1:-}"
+if [ -z "$dump" ] || [ ! -r "$dump" ]; then
+  echo "usage: {{ app_name }}-restore <path-to.dump>" >&2
+  echo "available local backups:" >&2
+  ls -1t "${BACKUP_DIR:-/var/backups/{{ app_name }}}"/{{ app_name }}-*.dump 2>/dev/null >&2 || echo "  (none)" >&2
+  exit 1
+fi
+
+echo "!! This OVERWRITES the current '{{ db_name }}' database with:"
+echo "     $dump"
+read -r -p "Type 'yes' to continue: " ans
+[ "$ans" = "yes" ] || { echo "aborted"; exit 1; }
+
+echo "[restore] stopping app"
+systemctl stop {{ app_name }} || true
+
+echo "[restore] restoring (clean + recreate objects)"
+# --clean --if-exists drops existing objects first; --no-owner keeps everything
+# owned by the connecting app role. Exit status is checked by `set -e`.
+pg_restore --clean --if-exists --no-owner --no-privileges --dbname="$DATABASE_URL" "$dump"
+
+echo "[restore] starting app"
+systemctl start {{ app_name }}
+echo "[restore] done — check the dashboard to confirm the data is back"

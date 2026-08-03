@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Örgülog database backup (pg_dump + offsite rsync)
+After=postgresql.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=/etc/{{ app_name }}/backup.env
+ExecStart=/usr/local/bin/{{ app_name }}-backup
+# Don't hang forever if the offsite host is unreachable.
+TimeoutStartSec=1800

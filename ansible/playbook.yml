@@ -22,6 +22,9 @@
     - nodejs   # Node.js LTS from NodeSource
     - postgres # Postgres server + app database/role (dashboard storage)
     - app      # push code, npm ci, build, systemd service
+    # Daily pg_dump + offsite rsync so dashboard data survives a disk/server loss.
+    - role: backup
+      when: backup_enabled | default(true)
     # Host nginx only on a dedicated box. On a server whose edge is already a
     # reverse proxy (e.g. the Klip Caddy here), keep manage_nginx=false.
     - role: nginx

@@ -1,0 +1,95 @@
+---
+# Scheduled PostgreSQL backups for the dashboard. Everything the owner edits
+# (prices, custom product photos, translations) lives only in Postgres — none of
+# it is in git. This role dumps the database daily with pg_dump (compressed,
+# verified), keeps `backup_retention_days` locally, and rsyncs every dump to an
+# offsite host so a disk/server loss never loses the catalog. A systemd timer
+# drives it. Restore: run `{{ app_name }}-restore <dump>` (see README).
+
+- name: Ensure the local backup directory exists (root-only)
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Install the backup script
+  ansible.builtin.template:
+    src: orgulog-backup.sh.j2
+    dest: "/usr/local/bin/{{ app_name }}-backup"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the restore helper
+  ansible.builtin.template:
+    src: orgulog-restore.sh.j2
+    dest: "/usr/local/bin/{{ app_name }}-restore"
+    owner: root
+    group: root
+    mode: "0755"
+
+# DATABASE_URL + offsite target. Kept 0600 root (the dump credentials are here);
+# systemd hands it to the script via EnvironmentFile.
+- name: Install the backup config (secrets — DATABASE_URL + remote target)
+  ansible.builtin.template:
+    src: orgulog-backup.env.j2
+    dest: "/etc/{{ app_name }}/backup.env"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Install the backup systemd service
+  ansible.builtin.template:
+    src: orgulog-backup.service.j2
+    dest: "/etc/systemd/system/{{ app_name }}-backup.service"
+    mode: "0644"
+
+- name: Install the backup systemd timer
+  ansible.builtin.template:
+    src: orgulog-backup.timer.j2
+    dest: "/etc/systemd/system/{{ app_name }}-backup.timer"
+    mode: "0644"
+
+# ── Offsite SSH key ────────────────────────────────────────────────────────────
+# A dedicated ed25519 key for root, used only for the backup rsync. On the first
+# run this prints the public key; add it to the offsite host's authorized_keys so
+# the sync can connect. Skipped entirely when offsite is disabled.
+- name: Set up the offsite backup SSH key
+  when: backup_remote_enabled | bool
+  block:
+    - name: Ensure root's .ssh directory exists
+      ansible.builtin.file:
+        path: /root/.ssh
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Generate a dedicated SSH key for offsite backups
+      ansible.builtin.command:
+        cmd: "ssh-keygen -t ed25519 -N '' -f {{ backup_ssh_key }} -C {{ app_name }}-backup@{{ inventory_hostname }}"
+        creates: "{{ backup_ssh_key }}"
+
+    - name: Read the backup public key
+      ansible.builtin.slurp:
+        src: "{{ backup_ssh_key }}.pub"
+      register: backup_pubkey
+
+    - name: Show the public key to authorise on the offsite host
+      ansible.builtin.debug:
+        msg: >-
+          OFFSITE BACKUP KEY — add this line to
+          {{ backup_remote_user }}@{{ backup_remote_host }}:~/.ssh/authorized_keys
+          so nightly backups can connect:
+          {{ backup_pubkey.content | b64decode | trim }}
+
+# daemon_reload picks up new/changed unit files before we enable the timer.
+- name: Enable and start the backup timer
+  ansible.builtin.systemd:
+    name: "{{ app_name }}-backup.timer"
+    enabled: true
+    state: started
+    daemon_reload: true

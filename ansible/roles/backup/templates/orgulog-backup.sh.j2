@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Örgülog database backup: pg_dump (custom format) → local dir → offsite rsync.
+# Runs from the {{ app_name }}-backup.service systemd unit (daily via .timer), or
+# by hand as root:  /usr/local/bin/{{ app_name }}-backup
+set -euo pipefail
+
+# Config (DATABASE_URL + remote settings). systemd passes these via
+# EnvironmentFile; when run by hand as root we source the same file.
+if [ -z "${DATABASE_URL:-}" ] && [ -r "/etc/{{ app_name }}/backup.env" ]; then
+  set -a; . "/etc/{{ app_name }}/backup.env"; set +a
+fi
+: "${DATABASE_URL:?DATABASE_URL not set}"
+: "${BACKUP_DIR:?BACKUP_DIR not set}"
+
+umask 077
+mkdir -p "$BACKUP_DIR"
+
+ts="$(date -u +%Y%m%dT%H%M%SZ)"
+file="$BACKUP_DIR/{{ app_name }}-$ts.dump"
+
+echo "[backup] dumping database -> $file"
+# Custom format: compressed and restorable with pg_restore. Write to .part first
+# so a crash mid-dump never leaves a half file that looks like a good backup.
+pg_dump --format=custom --no-owner --no-privileges --dbname="$DATABASE_URL" --file="$file.part"
+
+# Verify the archive is readable before we trust it (catches truncation/corruption).
+pg_restore --list "$file.part" >/dev/null
+mv "$file.part" "$file"
+( cd "$BACKUP_DIR" && sha256sum "$(basename "$file")" > "$(basename "$file").sha256" )
+echo "[backup] wrote $(du -h "$file" | cut -f1) — archive verified OK"
+
+# ── Local retention ──────────────────────────────────────────────────────────
+find "$BACKUP_DIR" -maxdepth 1 -type f -name '{{ app_name }}-*.dump*' \
+  -mtime "+${BACKUP_RETENTION_DAYS:-14}" -print -delete
+
+# ── Offsite copy ───────────────────────────────────────────────────────────────
+if [ "${BACKUP_REMOTE_ENABLED:-false}" = "true" ]; then
+  if [ -z "${BACKUP_REMOTE_HOST:-}" ] || [ -z "${BACKUP_REMOTE_PATH:-}" ]; then
+    echo "[backup] ERROR: offsite enabled but BACKUP_REMOTE_HOST/PATH is empty" >&2
+    exit 1
+  fi
+  echo "[backup] syncing -> ${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_PATH}"
+  delete_flag=""
+  [ "${BACKUP_REMOTE_DELETE:-false}" = "true" ] && delete_flag="--delete"
+  rsync -az $delete_flag \
+    -e "ssh -p ${BACKUP_REMOTE_PORT:-22} -i ${BACKUP_SSH_KEY} -o StrictHostKeyChecking=accept-new -o BatchMode=yes" \
+    "$BACKUP_DIR"/ "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_PATH}/"
+  echo "[backup] offsite sync complete"
+else
+  echo "[backup] offsite disabled (BACKUP_REMOTE_ENABLED=false) — LOCAL COPY ONLY"
+fi
+
+echo "[backup] done"
