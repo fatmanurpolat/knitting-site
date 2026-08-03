@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { AppConfig } from '../../../infrastructure/config';
 import { Locale, LOCALES } from '../../../domain/model/Locale';
 import { getMessages, Messages } from '../../../i18n/messages';
@@ -52,6 +55,26 @@ export interface BaseViewModel {
   /** Prefix a root-absolute app path with the current locale, e.g. '/dolls' → '/en/dolls'. */
   href: (path: string) => string;
   formatPrice: (cents: number, currency: string) => string;
+  /** Content hash of styles.css for cache-busting the stylesheet link. */
+  assetVersion: string;
+}
+
+/**
+ * Short content hash of the main stylesheet, appended to its URL as `?v=…` so a
+ * deploy's CSS changes bypass the browser cache (assets are served with a long
+ * max-age). Computed once per process — the app restarts on deploy, and the
+ * static generator runs once, so the value is always fresh for the current CSS.
+ */
+let cachedAssetVersion: string | undefined;
+export function assetVersion(publicDir: string): string {
+  if (cachedAssetVersion !== undefined) return cachedAssetVersion;
+  try {
+    const css = readFileSync(path.join(publicDir, 'css', 'styles.css'));
+    cachedAssetVersion = createHash('sha1').update(css).digest('hex').slice(0, 8);
+  } catch {
+    cachedAssetVersion = '0';
+  }
+  return cachedAssetVersion;
 }
 
 /** A locale-aware price formatter. Currency (usually TRY) is unchanged. */
@@ -191,5 +214,6 @@ export function baseViewModel(
     langLinks,
     href: (path: string) => localizeHref(locale, path),
     formatPrice: makeFormatPrice(locale),
+    assetVersion: assetVersion(config.publicDir),
   };
 }
