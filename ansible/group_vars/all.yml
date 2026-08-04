@@ -19,6 +19,12 @@ app_host: "0.0.0.0"
 # URL added to the prefilled WhatsApp order message. Defaults to the site domain.
 site_url: "https://{{ server_name }}"
 
+# Cloudflare Web Analytics beacon token (privacy-friendly visitor stats). Get it
+# from the Cloudflare dashboard → Web Analytics → add site (hostname orgulog.site).
+# Public value (appears in the page HTML), so it lives here, not in secrets.yml.
+# Empty = no analytics script is emitted.
+cf_analytics_token: ""
+
 # This server's edge is the existing Klip Caddy (owns 80/443), so we do NOT
 # install a second host nginx. Set true only on a dedicated/fresh box.
 manage_nginx: false

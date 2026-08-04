@@ -43,3 +43,8 @@
 />
 <link rel="stylesheet" href="/css/styles.css?v=<%= assetVersion %>" />
 <link rel="icon" href="/images/favicon.svg" type="image/svg+xml" />
+
+<% if (typeof analyticsToken !== 'undefined' && analyticsToken) { %>
+<!-- Cloudflare Web Analytics — privacy-friendly, no cookies. -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "<%= analyticsToken %>"}'></script>
+<% } %>

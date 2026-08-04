@@ -18,8 +18,10 @@ Environment=NODE_ENV={{ app_env }}
 Environment=HOST={{ app_host }}
 Environment=PORT={{ app_port }}
 Environment=SITE_URL={{ site_url }}
-Environment=BRAND_NAME={{ brand_name }}
-Environment=BRAND_TAGLINE={{ brand_tagline }}
+Environment=CF_ANALYTICS_TOKEN={{ cf_analytics_token }}
+# Quote values that contain spaces, or systemd splits them and drops the rest.
+Environment="BRAND_NAME={{ brand_name }}"
+Environment="BRAND_TAGLINE={{ brand_tagline }}"
 Environment=BRAND_INSTAGRAM={{ brand_instagram }}
 Environment=BRAND_WHATSAPP={{ brand_whatsapp }}
 Environment=BRAND_EMAIL={{ brand_email }}

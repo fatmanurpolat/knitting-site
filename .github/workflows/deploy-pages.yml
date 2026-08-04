@@ -36,6 +36,9 @@ jobs:
         env:
           # Absolute origin for links (product URL in the WhatsApp order message, og:image).
           SITE_URL: "https://orgulog.site"
+          # Cloudflare Web Analytics token (set repo variable: Settings → Secrets and
+          # variables → Actions → Variables → CF_ANALYTICS_TOKEN). Empty = no analytics.
+          CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
           # BASE_PATH: "/${{ github.event.repository.name }}"  # only for project sub-path sites
       - uses: actions/upload-pages-artifact@v3
         with:

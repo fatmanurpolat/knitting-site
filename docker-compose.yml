@@ -34,6 +34,8 @@ services:
       DATABASE_URL: postgres://orgulog:${DB_PASSWORD:-orgulog_dev}@db:5432/orgulog
       # Public origin for absolute links (e.g. product URL in the WhatsApp order message).
       SITE_URL: ${SITE_URL:-}
+      # Cloudflare Web Analytics beacon token (optional; empty = no analytics).
+      CF_ANALYTICS_TOKEN: ${CF_ANALYTICS_TOKEN:-}
       # Dashboard (single user). CHANGE THESE in production.
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}

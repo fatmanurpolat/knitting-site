@@ -25,6 +25,13 @@ export interface AppConfig {
   readonly database: { readonly url?: string };
   /** Single-user dashboard credentials + cookie signing secret. */
   readonly admin: AdminConfig;
+  /** Optional privacy-friendly web analytics. */
+  readonly analytics: AnalyticsConfig;
+}
+
+export interface AnalyticsConfig {
+  /** Cloudflare Web Analytics beacon token. Empty ⇒ no analytics script is emitted. */
+  readonly cloudflareToken: string;
 }
 
 export interface AdminConfig {
@@ -80,5 +87,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       password: env.ADMIN_PASSWORD ?? '',
       sessionSecret: env.SESSION_SECRET ?? 'dev-insecure-secret-change-me-please-32+',
     },
+    analytics: { cloudflareToken: (env.CF_ANALYTICS_TOKEN ?? '').trim() },
   };
 }

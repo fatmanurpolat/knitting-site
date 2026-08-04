@@ -57,6 +57,8 @@ export interface BaseViewModel {
   formatPrice: (cents: number, currency: string) => string;
   /** Content hash of styles.css for cache-busting the stylesheet link. */
   assetVersion: string;
+  /** Cloudflare Web Analytics beacon token ('' ⇒ no analytics script). */
+  analyticsToken: string;
 }
 
 /**
@@ -215,5 +217,6 @@ export function baseViewModel(
     href: (path: string) => localizeHref(locale, path),
     formatPrice: makeFormatPrice(locale),
     assetVersion: assetVersion(config.publicDir),
+    analyticsToken: config.analytics.cloudflareToken,
   };
 }
