@@ -142,8 +142,11 @@ export function buildOrderLinks(
 
   let whatsapp: string | null = null;
   if (!NO_WHATSAPP.has(brand.whatsappUrl)) {
+    // Replacement-function form so a '$' in the product name is not interpreted
+    // as a special replacement pattern ($&, $', $$, …).
     const message =
-      t.product.waMessage.replace('{product}', product.name) + (productUrl ? `\n${productUrl}` : '');
+      t.product.waMessage.replace('{product}', () => product.name) +
+      (productUrl ? `\n${productUrl}` : '');
     const sep = brand.whatsappUrl.includes('?') ? '&' : '?';
     whatsapp = `${brand.whatsappUrl}${sep}text=${encodeURIComponent(message)}`;
   }

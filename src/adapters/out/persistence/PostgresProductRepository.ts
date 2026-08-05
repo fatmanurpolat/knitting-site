@@ -71,6 +71,15 @@ async function upsertTranslations(
   for (const locale of LOCALES) {
     if (locale === DEFAULT_LOCALE) continue;
     const { name, description } = input.translations[locale];
+    if (!name && !description) {
+      // No copy for this locale — remove any existing row rather than storing
+      // blank ('', '') strings (keeps the table sparse; clears a deleted translation).
+      await client.query('DELETE FROM product_translations WHERE product_id = $1 AND locale = $2', [
+        productId,
+        locale,
+      ]);
+      continue;
+    }
     await client.query(
       `INSERT INTO product_translations (product_id, locale, name, description)
        VALUES ($1, $2, $3, $4)

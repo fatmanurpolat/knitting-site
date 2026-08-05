@@ -39,6 +39,10 @@ export class InMemoryProductRepository implements ProductRepository {
   }
 
   async create(input: ProductInput): Promise<Product> {
+    // Mirror the Postgres UNIQUE(slug) constraint so both backends agree.
+    if (this.items.some((p) => p.slug === input.slug)) {
+      throw new Error(`slug already exists: ${input.slug}`);
+    }
     const product = toProduct(randomUUID(), input);
     this.items.push(product);
     return product;
@@ -47,6 +51,9 @@ export class InMemoryProductRepository implements ProductRepository {
   async update(id: string, input: ProductInput): Promise<Product | null> {
     const idx = this.items.findIndex((p) => p.id === id);
     if (idx === -1) return null;
+    if (this.items.some((p) => p.slug === input.slug && p.id !== id)) {
+      throw new Error(`slug already exists: ${input.slug}`);
+    }
     const updated = toProduct(id, input);
     this.items[idx] = updated;
     return updated;

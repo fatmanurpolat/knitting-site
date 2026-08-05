@@ -100,7 +100,12 @@ export function isFeatured(product: Product): boolean {
 }
 
 export function byOrder(a: Product, b: Product): number {
-  return a.order - b.order;
+  // Deterministic total order: primary by `order`, then category, then slug — so
+  // ties never depend on insertion order or the storage backend. This keeps the
+  // home page's featured selection stable and identical across dev and prod.
+  return (
+    a.order - b.order || a.category.localeCompare(b.category) || a.slug.localeCompare(b.slug)
+  );
 }
 
 /** Turn a name into a URL-safe slug (Turkish characters folded to ASCII). */

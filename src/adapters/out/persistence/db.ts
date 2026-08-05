@@ -4,7 +4,14 @@ import { Pool } from 'pg';
 import { CATALOG_SEED_ENTRIES } from './catalog.seed';
 
 export function createPool(databaseUrl: string): Pool {
-  return new Pool({ connectionString: databaseUrl, max: 8 });
+  const pool = new Pool({ connectionString: databaseUrl, max: 8 });
+  // An idle client erroring (Postgres restart, dropped connection) emits 'error';
+  // with no listener Node treats it as uncaught and kills the process. Log and
+  // let the pool reconnect on the next query instead.
+  pool.on('error', (err) => {
+    console.error('[db] idle client error (pool reconnects on next query):', err.message);
+  });
+  return pool;
 }
 
 /** Wait for the database to accept connections (docker start-up race). */
@@ -48,6 +55,8 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE INDEX IF NOT EXISTS products_category_order_idx ON products (category, sort_order);
+-- Supports the home-page featured query (WHERE featured ORDER BY sort_order).
+CREATE INDEX IF NOT EXISTS products_featured_order_idx ON products (sort_order) WHERE featured;
 
 -- Non-default-language product copy. Turkish stays in products.{name,description};
 -- English/German live here, one row per (product, locale).
@@ -102,13 +111,21 @@ function contentTypeFor(file: string): string {
  * that from then on all product images are served from the database.
  */
 export async function seedIfEmpty(pool: Pool, publicDir: string): Promise<number> {
-  const { rows } = await pool.query<{ count: string }>('SELECT COUNT(*)::int AS count FROM products');
-  if (Number(rows[0]?.count ?? 0) > 0) return 0;
-
   let inserted = 0;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Serialize concurrent boots: a transaction-scoped advisory lock (released at
+    // COMMIT/ROLLBACK) ensures two overlapping starts can't both seed. The count
+    // is re-checked inside the lock so the check-and-insert is atomic.
+    await client.query('SELECT pg_advisory_xact_lock($1)', [727185]);
+    const { rows } = await client.query<{ count: string }>(
+      'SELECT COUNT(*)::int AS count FROM products',
+    );
+    if (Number(rows[0]?.count ?? 0) > 0) {
+      await client.query('ROLLBACK');
+      return 0;
+    }
     for (const entry of CATALOG_SEED_ENTRIES) {
       let imageId: string | null = null;
       try {
