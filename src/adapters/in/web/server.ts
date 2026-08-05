@@ -34,7 +34,26 @@ export async function buildServer({ config, catalog, admin, images }: ServerDeps
     bodyLimit: 12 * 1024 * 1024, // headroom for image uploads
     // So '/en' and '/en/' both resolve to the locale's home page.
     ignoreTrailingSlash: true,
+    // The app is only reachable via the edge proxy (ufw blocks 3000), so trust
+    // X-Forwarded-* — gives real client IPs for the login rate limiter and logs.
+    trustProxy: true,
   });
+
+  // Content-Security-Policy: everything is same-origin (self-hosted fonts, CSS,
+  // JS, images) except the optional Cloudflare Web Analytics beacon. No inline
+  // scripts are used; inline styles are (hence 'unsafe-inline' for style only).
+  const CSP = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' https://static.cloudflareinsights.com",
+    "connect-src 'self' https://cloudflareinsights.com https://static.cloudflareinsights.com",
+  ].join('; ');
 
   // Sensible security headers. Frame options relaxed to SAMEORIGIN so the admin
   // image previews work; the dashboard is noindex.
@@ -43,6 +62,10 @@ export async function buildServer({ config, catalog, admin, images }: ServerDeps
     reply.header('X-Frame-Options', 'SAMEORIGIN');
     reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     reply.header('X-DNS-Prefetch-Control', 'off');
+    reply.header('Content-Security-Policy', CSP);
+    if (config.env === 'production') {
+      reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
     return payload;
   });
 

@@ -90,3 +90,23 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     analytics: { cloudflareToken: (env.CF_ANALYTICS_TOKEN ?? '').trim() },
   };
 }
+
+/** The source-visible dev fallback — must never be the live signing key. */
+const INSECURE_SESSION_SECRET = 'dev-insecure-secret-change-me-please-32+';
+
+/**
+ * Fail closed in production: refuse to boot if the cookie-signing secret is
+ * missing, too short, or the well-known dev default. Otherwise an unset
+ * SESSION_SECRET would silently fall back to a public value, letting anyone
+ * forge the admin session cookie. Called from the server entrypoint only (the
+ * static generator doesn't need it).
+ */
+export function assertProductionSecrets(config: AppConfig): void {
+  if (config.env !== 'production') return;
+  const s = config.admin.sessionSecret;
+  if (!s || s.length < 32 || s === INSECURE_SESSION_SECRET) {
+    throw new Error(
+      'Refusing to start: SESSION_SECRET must be set to a strong value (>= 32 chars) in production.',
+    );
+  }
+}

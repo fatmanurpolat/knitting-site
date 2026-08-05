@@ -1,4 +1,4 @@
-import { loadConfig } from './infrastructure/config';
+import { loadConfig, assertProductionSecrets } from './infrastructure/config';
 import { buildContainer } from './infrastructure/container';
 import { buildServer } from './adapters/in/web/server';
 
@@ -9,6 +9,7 @@ import { buildServer } from './adapters/in/web/server';
  */
 async function main(): Promise<void> {
   const config = loadConfig();
+  assertProductionSecrets(config); // fail closed on a missing/weak secret in prod
   const container = await buildContainer(config);
   const app = await buildServer({
     config,
@@ -35,8 +36,14 @@ async function main(): Promise<void> {
     await app.listen({ host: config.host, port: config.port });
   } catch (err) {
     app.log.error(err);
+    await container.close(); // drain the DB pool on a bind failure
     process.exit(1);
   }
 }
 
-void main();
+main().catch((err) => {
+  // A rejection from buildContainer (e.g. DB unreachable) must log and exit
+  // non-zero rather than becoming a silent unhandled rejection.
+  console.error(err);
+  process.exit(1);
+});

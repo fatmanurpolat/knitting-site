@@ -12,6 +12,42 @@ interface AdminDeps {
   admin: CatalogAdmin;
 }
 
+// ── CSRF defence: state-changing admin requests must be same-origin ──────────
+function isSameOriginWrite(req: FastifyRequest): boolean {
+  if (req.method === 'GET' || req.method === 'HEAD') return true;
+  const host = req.headers.host;
+  const src = req.headers.origin || req.headers.referer;
+  if (!src || !host) return false;
+  try {
+    return new URL(src).host === host;
+  } catch {
+    return false;
+  }
+}
+
+// ── Login brute-force throttle (per client IP; requires trustProxy) ──────────
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX = 10;
+const loginAttempts = new Map<string, { count: number; first: number }>();
+function loginThrottled(ip: string): boolean {
+  const rec = loginAttempts.get(ip);
+  if (!rec) return false;
+  if (Date.now() - rec.first > LOGIN_WINDOW_MS) {
+    loginAttempts.delete(ip);
+    return false;
+  }
+  return rec.count >= LOGIN_MAX;
+}
+function recordFailedLogin(ip: string): void {
+  const now = Date.now();
+  const rec = loginAttempts.get(ip);
+  if (!rec || now - rec.first > LOGIN_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, first: now });
+  } else {
+    rec.count++;
+  }
+}
+
 interface ParsedForm {
   fields: Record<string, string>;
   file?: { buffer: Buffer; mimetype: string; filename: string };
@@ -113,12 +149,22 @@ export async function registerAdminRoutes(
   });
 
   app.post<{ Body: { user?: string; password?: string } }>('/admin/login', async (req, reply) => {
+    if (loginThrottled(req.ip)) {
+      reply.code(429);
+      return reply.view('admin/login.ejs', {
+        ...ctx,
+        error: 'Çok fazla başarısız deneme. Birkaç dakika sonra tekrar deneyin.',
+        disabled: !config.admin.password,
+      });
+    }
     const user = (req.body?.user ?? config.admin.user).trim();
     const password = req.body?.password ?? '';
     if (checkCredentials(config, user, password)) {
+      loginAttempts.delete(req.ip);
       setLoginCookie(reply, config);
       return reply.redirect('/admin');
     }
+    recordFailedLogin(req.ip);
     return reply.redirect('/admin/login?error=1');
   });
 
@@ -132,6 +178,11 @@ export async function registerAdminRoutes(
     g.addHook('onRequest', async (req, reply) => {
       if (!isAuthenticated(req)) {
         return reply.redirect('/admin/login');
+      }
+      // Block cross-site writes (create/update/delete) as CSRF defence-in-depth.
+      if (!isSameOriginWrite(req)) {
+        reply.code(403);
+        return reply.send('Forbidden: cross-site request blocked.');
       }
     });
 
