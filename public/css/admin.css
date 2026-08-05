@@ -71,7 +71,7 @@
   padding: 0.9rem 1rem 1.1rem;
   margin: 0;
 }
-.i18n-group legend { font-weight: 700; font-size: 0.95rem; color: var(--ink); padding: 0 0.4rem; }
+.i18n-group legend { font-weight: 600; font-size: 0.95rem; color: var(--ink); padding: 0 0.4rem; }
 .checkbox { flex-direction: row !important; align-items: center; gap: 0.6rem !important; font-weight: 500; }
 .checkbox input { width: auto; }
 .field-image { display: flex; gap: 1.25rem; align-items: flex-end; flex-wrap: wrap; }
