@@ -15,6 +15,8 @@ fi
 
 umask 077
 mkdir -p "$BACKUP_DIR"
+# Clear any partial dump left by a crashed run so it is never trusted or synced.
+rm -f "$BACKUP_DIR"/*.dump.part 2>/dev/null || true
 
 ts="$(date -u +%Y%m%dT%H%M%SZ)"
 file="$BACKUP_DIR/{{ app_name }}-$ts.dump"
@@ -43,7 +45,9 @@ if [ "${BACKUP_REMOTE_ENABLED:-false}" = "true" ]; then
   echo "[backup] syncing -> ${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_PATH}"
   delete_flag=""
   [ "${BACKUP_REMOTE_DELETE:-false}" = "true" ] && delete_flag="--delete"
+  # Only ship completed dumps + their checksums — never *.part or stray files.
   rsync -az $delete_flag \
+    --include='{{ app_name }}-*.dump' --include='{{ app_name }}-*.dump.sha256' --exclude='*' \
     -e "ssh -p ${BACKUP_REMOTE_PORT:-22} -i ${BACKUP_SSH_KEY} -o StrictHostKeyChecking=accept-new -o BatchMode=yes" \
     "$BACKUP_DIR"/ "${BACKUP_REMOTE_USER}@${BACKUP_REMOTE_HOST}:${BACKUP_REMOTE_PATH}/"
   echo "[backup] offsite sync complete"

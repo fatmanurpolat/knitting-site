@@ -27,7 +27,7 @@ server {
 
     # Everything else goes to the Node app.
     location / {
-        proxy_pass http://{{ app_host }}:{{ app_port }};
+        proxy_pass http://{{ app_upstream_host | default('127.0.0.1') }}:{{ app_port }};
         proxy_http_version 1.1;
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;

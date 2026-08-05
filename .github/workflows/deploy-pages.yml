@@ -20,7 +20,9 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # false (GitHub's recommended setting): a new run queues behind an active
+  # deployment instead of cancelling it mid-deploy and leaving Pages inconsistent.
+  cancel-in-progress: false
 
 jobs:
   build:

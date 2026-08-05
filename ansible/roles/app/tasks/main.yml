@@ -22,6 +22,7 @@
       - "--exclude=.git"
       - "--exclude=node_modules"
       - "--exclude=dist"
+      - "--exclude=dist-site"
       - "--exclude=ansible"
       - "--exclude=.env"
       - "--exclude=.DS_Store"

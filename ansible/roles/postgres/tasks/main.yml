@@ -26,16 +26,20 @@
   register: db_role_check
   changed_when: false
 
+# Pass the SQL (with the password) via stdin, not `psql -c`, so the secret never
+# appears in the target's process table / argv.
 - name: Create the app database role
   ansible.builtin.command:
-    cmd: psql -c "CREATE ROLE {{ db_user }} LOGIN PASSWORD '{{ db_password }}'"
+    cmd: psql -v ON_ERROR_STOP=1
+    stdin: "CREATE ROLE {{ db_user }} LOGIN PASSWORD '{{ db_password }}';"
   become_user: postgres
   when: db_role_check.stdout != "1"
   no_log: true
 
 - name: Keep the app database role password in sync
   ansible.builtin.command:
-    cmd: psql -c "ALTER ROLE {{ db_user }} WITH LOGIN PASSWORD '{{ db_password }}'"
+    cmd: psql -v ON_ERROR_STOP=1
+    stdin: "ALTER ROLE {{ db_user }} WITH LOGIN PASSWORD '{{ db_password }}';"
   become_user: postgres
   no_log: true
   changed_when: false
