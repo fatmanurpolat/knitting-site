@@ -14,6 +14,7 @@ npm-debug.log*
 # ansible
 ansible/inventory.ini
 ansible/secrets.yml
+ansible/.vault-pass
 *.retry
 
 # editor / OS
